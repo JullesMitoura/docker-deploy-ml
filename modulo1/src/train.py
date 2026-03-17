@@ -1,5 +1,4 @@
 import os
-import logging
 import sqlite3
 import pickle
 import numpy as np
@@ -8,23 +7,15 @@ from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import cross_val_score
 from sklearn.metrics import mean_absolute_error, root_mean_squared_error, r2_score
 
-# --- Logging -----------------------------------------------------------------
-LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
-logging.basicConfig(
-    format="%(asctime)s | %(levelname)-8s | %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-    level=getattr(logging, LOG_LEVEL, logging.INFO),
-)
-log = logging.getLogger(__name__)
-
 # --- Configuração via variáveis de ambiente ----------------------------------
 DB_PATH    = os.getenv("DB_PATH",   "data/heat_exchanger.db")
 MODEL_DIR  = os.getenv("MODEL_DIR", "models")
 MODEL_PATH = os.path.join(MODEL_DIR, "model.pkl")
+REFERENCE_PATH = os.path.join(MODEL_DIR, "reference_data.pkl")
 
 
 def load_data(db_path: str) -> pd.DataFrame:
-    log.info("Conectando ao banco: %s", db_path)
+    print(f"Carregando dados de: {db_path}")
     conn = sqlite3.connect(db_path)
     df = pd.read_sql_query(
         "SELECT timestamp, heat_efficiency FROM heat_exchanger ORDER BY timestamp",
@@ -34,16 +25,16 @@ def load_data(db_path: str) -> pd.DataFrame:
 
     df["timestamp"] = pd.to_datetime(df["timestamp"])
     df["day_index"] = (df["timestamp"] - df["timestamp"].min()).dt.days
-    log.info("Dados carregados: %d registros | período: %s → %s",
-             len(df), df["timestamp"].min().date(), df["timestamp"].max().date())
+    print(
+        f"Registros: {len(df)} | Período: "
+        f"{df['timestamp'].min().date()} \u2192 {df['timestamp'].max().date()}"
+    )
     return df
 
 
 def train(X: np.ndarray, y: np.ndarray) -> LinearRegression:
-    log.info("Iniciando treino — modelo: LinearRegression")
     model = LinearRegression()
     model.fit(X, y)
-    log.info("Treino concluído — coef=%.6f  intercept=%.4f", model.coef_[0], model.intercept_)
     return model
 
 
@@ -51,28 +42,46 @@ def evaluate(model: LinearRegression, X: np.ndarray, y: np.ndarray):
     cv_scores = cross_val_score(model, X, y, cv=5, scoring="r2")
     y_pred = model.predict(X)
 
-    log.info("MAE=%.4f%%  RMSE=%.4f%%  R²=%.4f  R²_cv=%.4f±%.4f  tendência=%.4f%%/dia",
-             mean_absolute_error(y, y_pred),
-             root_mean_squared_error(y, y_pred),
-             r2_score(y, y_pred),
-             cv_scores.mean(), cv_scores.std(),
-             model.coef_[0])
+    return {
+        "mae": mean_absolute_error(y, y_pred),
+        "rmse": root_mean_squared_error(y, y_pred),
+        "r2": r2_score(y, y_pred),
+        "r2_cv_mean": cv_scores.mean(),
+        "r2_cv_std": cv_scores.std(),
+        "trend": model.coef_[0],
+    }
 
 
-def save_artifacts(model: LinearRegression):
+def save_artifacts(model: LinearRegression, df: pd.DataFrame):
     os.makedirs(MODEL_DIR, exist_ok=True)
     with open(MODEL_PATH, "wb") as f:
         pickle.dump(model, f)
-    log.info("Modelo salvo: %s", MODEL_PATH)
+    reference_data = df[["timestamp", "day_index", "heat_efficiency"]].copy()
+    with open(REFERENCE_PATH, "wb") as f:
+        pickle.dump(reference_data, f)
 
 
 if __name__ == "__main__":
     df = load_data(DB_PATH)
-    log.info("Eficiência: min=%.2f%%  max=%.2f%%", df["heat_efficiency"].min(), df["heat_efficiency"].max())
+    print(
+        "Eficiência: "
+        f"min={df['heat_efficiency'].min():.2f}%  "
+        f"max={df['heat_efficiency'].max():.2f}%"
+    )
 
     X = df[["day_index"]].values
     y = df["heat_efficiency"].values
 
+    print("\nTreinando modelo de regressão linear temporal...\n")
     model = train(X, y)
-    evaluate(model, X, y)
-    save_artifacts(model)
+    metrics = evaluate(model, X, y)
+    print("=== Métricas de Avaliação ===")
+    print(f"  MAE       : {metrics['mae']:.4f}%")
+    print(f"  RMSE      : {metrics['rmse']:.4f}%")
+    print(f"  R²        : {metrics['r2']:.4f}")
+    print(f"  R² CV (5) : {metrics['r2_cv_mean']:.4f} ± {metrics['r2_cv_std']:.4f}")
+    print(f"  Tendência : {metrics['trend']:.4f}% por dia\n")
+
+    save_artifacts(model, df)
+    print(f"Modelo salvo em     : {MODEL_PATH}")
+    print(f"Referência salva em : {REFERENCE_PATH}")

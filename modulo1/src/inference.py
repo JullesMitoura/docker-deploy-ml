@@ -9,29 +9,17 @@ inference.py — dois modos de uso:
     python src/inference.py --efficiency 82      (extrapolação futura)
 """
 import os
-import logging
-import sqlite3
 import argparse
 import pickle
 import pandas as pd
 
-# --- Logging -----------------------------------------------------------------
-LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
-logging.basicConfig(
-    format="%(asctime)s | %(levelname)-8s | %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-    level=getattr(logging, LOG_LEVEL, logging.INFO),
-)
-log = logging.getLogger(__name__)
-
 # --- Configuração via variáveis de ambiente ----------------------------------
-DB_PATH    = os.getenv("DB_PATH",   "data/heat_exchanger.db")
 MODEL_DIR  = os.getenv("MODEL_DIR", "models")
 MODEL_PATH = os.path.join(MODEL_DIR, "model.pkl")
+REFERENCE_PATH = os.path.join(MODEL_DIR, "reference_data.pkl")
 
 
 def load_artifacts():
-    log.info("Carregando modelo: %s", MODEL_PATH)
     if not os.path.exists(MODEL_PATH):
         raise FileNotFoundError(
             f"Modelo não encontrado em: {MODEL_PATH}\n"
@@ -40,17 +28,15 @@ def load_artifacts():
     with open(MODEL_PATH, "rb") as f:
         model = pickle.load(f)
 
-    log.info("Carregando dados históricos: %s", DB_PATH)
-    conn = sqlite3.connect(DB_PATH)
-    df = pd.read_sql_query(
-        "SELECT timestamp, heat_efficiency FROM heat_exchanger ORDER BY timestamp",
-        conn,
-    )
-    conn.close()
-    df["timestamp"] = pd.to_datetime(df["timestamp"])
-    df["day_index"] = (df["timestamp"] - df["timestamp"].min()).dt.days
+    if not os.path.exists(REFERENCE_PATH):
+        raise FileNotFoundError(
+            f"Referência não encontrada em: {REFERENCE_PATH}\n"
+            "Execute 'python src/train.py' para gerar os artefatos."
+        )
+    with open(REFERENCE_PATH, "rb") as f:
+        df = pickle.load(f)
 
-    log.info("Artefatos prontos — %d registros históricos carregados", len(df))
+    df["timestamp"] = pd.to_datetime(df["timestamp"])
     return model, df
 
 
@@ -64,10 +50,6 @@ def predict_efficiency(model, df: pd.DataFrame, date_str: str) -> dict:
 
     efficiency = model.predict([[day_index]])[0]
     closest    = df.iloc[(df["day_index"] - day_index).abs().argsort()[:1]]
-
-    log.info("Predição: data=%s  day_index=%d  eficiência=%.4f%%", date_str, day_index, efficiency)
-    log.info("Referência histórica: data=%s  eficiência=%.4f%%",
-             closest["timestamp"].iloc[0].date(), closest["heat_efficiency"].iloc[0])
 
     return {
         "input_date": date_str,
@@ -86,17 +68,9 @@ def find_date_for_efficiency(model, df: pd.DataFrame, target_efficiency: float, 
     predicted_date = origin + pd.Timedelta(days=round(predicted_day))
     in_history     = predicted_date.date() <= df["timestamp"].max().date()
 
-    log.info("Regressão inversa: eficiência=%.2f%%  dia_previsto=%.1f  data=%s  [%s]",
-             target_efficiency, predicted_day, predicted_date.date(),
-             "histórico" if in_history else "extrapolação futura")
-
     df = df.copy()
     df["diff"] = (df["heat_efficiency"] - target_efficiency).abs()
     historical = df.nsmallest(top_k, "diff")
-
-    for i, row in enumerate(historical.itertuples(), 1):
-        log.info("  match %d: data=%s  eficiência=%.4f%%  delta=%.4f%%",
-                 i, row.timestamp.date(), row.heat_efficiency, row.diff)
 
     return {
         "target_efficiency": target_efficiency,
@@ -124,6 +98,26 @@ if __name__ == "__main__":
     model, df = load_artifacts()
 
     if args.date:
-        predict_efficiency(model, df, args.date)
+        result = predict_efficiency(model, df, args.date)
+        print(f"Data informada        : {result['input_date']}")
+        print(f"Eficiência prevista   : {result['predicted_efficiency']:.4f}%")
+        print(
+            "Referência histórica  : "
+            f"{result['closest_historical_date']} "
+            f"({result['closest_historical_efficiency']:.4f}%)"
+        )
     else:
-        find_date_for_efficiency(model, df, args.efficiency, top_k=args.top)
+        result = find_date_for_efficiency(model, df, args.efficiency, top_k=args.top)
+        print(f"Eficiência alvo       : {result['target_efficiency']:.4f}%")
+        print(f"Data estimada         : {result['predicted_date']}")
+        print(
+            "Status                : "
+            f"{'histórico' if result['in_history'] else 'extrapolação futura'}"
+        )
+        print("\nTop matches históricos:")
+        for i, row in enumerate(result["historical_matches"], 1):
+            print(
+                f"  {i}. {row['date']} | "
+                f"eficiência={row['recorded_efficiency']:.4f}% | "
+                f"delta={row['delta']:.4f}%"
+            )

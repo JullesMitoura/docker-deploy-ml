@@ -25,7 +25,7 @@
 </div>
 
 ## Modulo 01: Setup do Projeto de Machine Learning
-**Entrega:** repositório base funcional, projeto rodando localmente (sem Docker)
+> **Entrega**: repositório base funcional, projeto rodando localmente (sem Docker)
 
 ---
 
@@ -134,7 +134,25 @@ source .venv/bin/activate       # Linux/Mac
 pip install -r requirements.txt
 ```
 
-### 4. Execute o treino
+### 4. (Opcional) Explore os notebooks
+
+Os notebooks complementam os scripts com análises interativas. Execute dentro da pasta `modulo1/` com o ambiente virtual ativado:
+
+```bash
+pip install jupyter
+jupyter notebook notebooks/
+```
+
+| Notebook | Conteúdo |
+|----------|----------|
+| `eda.ipynb` | Análise exploratória completa: qualidade dos dados, evolução temporal, distribuições, correlações e quantificação da tendência de degradação |
+| `model_evaluation.ipynb` | Comparação de algoritmos (LinearRegression, Ridge, Polinomial grau 2, RandomForest): métricas, curvas de predição, capacidade de extrapolação e análise de resíduos |
+
+> Os notebooks leem o banco diretamente de `../data/heat_exchanger.db`. Execute-os a partir da pasta `notebooks/` ou ajuste o `DB_PATH` conforme necessário.
+
+---
+
+### 5. Execute o treino
 
 ```bash
 python src/train.py
@@ -159,7 +177,7 @@ Modelo salvo em     : models/model.pkl
 Referência salva em : models/reference_data.pkl
 ```
 
-### 5. Execute a inferência
+### 6. Execute a inferência
 
 ```bash
 # Modo 1 — prever eficiência para uma data
@@ -205,6 +223,9 @@ modulo1/
 ├── src/
 │   ├── train.py          # pipeline de treino: carrega DB → treina → salva artefatos
 │   └── inference.py      # dois modos: --date (eficiência) e --efficiency (data)
+├── notebooks/
+│   ├── eda.ipynb          # análise exploratória: qualidade, correlações e tendência de degradação
+│   └── model_evaluation.ipynb  # comparação de modelos e justificativa da escolha final
 ├── models/               # artefatos gerados: model.pkl e reference_data.pkl
 └── data/
     └── heat_exchanger.db # banco SQLite com os dados do trocador de calor
@@ -219,10 +240,8 @@ modulo1/
 - [ ] `train.py` executa sem erros e salva artefatos em `models/`
 - [ ] `inference.py --date` retorna a eficiência prevista para uma data
 - [ ] `inference.py --efficiency` retorna as datas para uma eficiência alvo
+- [ ] `eda.ipynb` executa sem erros e exibe as análises exploratórias
+- [ ] `model_evaluation.ipynb` executa sem erros e exibe a comparação de modelos
 - [ ] Entendeu a estrutura de pastas e a separação de responsabilidades
 
 ---
-
-## Próximo passo → Aula 02
-
-Na próxima aula vamos criar o `Dockerfile` e fazer o projeto rodar completamente dentro de um container, eliminando os problemas de ambiente que você acabou de ver.
