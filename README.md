@@ -34,18 +34,18 @@ Curso prático que conduz o aluno desde a organização de um projeto de ML até
 
 ## Estrutura do Curso
 
-| Aula | Tema | Entrega |
-|------|------|---------|
-| 01 | [Setup do projeto de ML](./modulo1/) | Repositório base funcional, projeto rodando localmente |
-| 02 | [Containerizando o projeto](./modulo2/) | Projeto rodando em container |
-| 03 | Separando treino e inferência | Dois containers com responsabilidades claras |
-| 04 | Otimização de imagens para ML | Imagens menores e mais rápidas |
-| 05 | Gerando e versionando artefatos de modelo | Modelo versionado fora da imagem |
-| 06 | Pipeline de build com GitHub Actions | CI funcionando |
-| 07 | Publicação da imagem | Imagem publicada e reutilizável |
-| 08 | Serving do modelo | API de inferência rodando em Docker |
-| 09 | Ambiente de produção | Pipeline completo local |
-| 10 | Workflow completo de ML em produção | Projeto finalizado |
+| Aula | Tema | Resumo | Entrega |
+|------|------|--------|---------|
+| 01 | [Setup do Projeto de ML](./modulo1/) | Estrutura do projeto, script de treino e inferência rodando localmente | Repositório base funcional, projeto rodando localmente |
+| 02 | [Containerizando o Projeto](./modulo2/) | Primeiro Dockerfile, instalação de dependências e execução do treino em container | Projeto rodando em container |
+| 03 | Treino e Inferência em Containers Separados | Dockerfiles distintos para treino e inferência com dependências e entrypoints isolados | Dois containers com responsabilidades claras |
+| 04 | Otimizando Imagens Docker para ML | Multi-stage build, cache de dependências e redução do tamanho final da imagem | Imagens menores e mais rápidas |
+| 05 | Persistindo e Versionando o Modelo | Uso de volumes para salvar o modelo fora do container e versionamento manual de artefatos | Modelo versionado fora da imagem |
+| 06 | Automatizando o Build com GitHub Actions | Workflow de CI com build automático, teste do container e cache de build | CI funcionando |
+| 07 | Publicando a Imagem no Docker Hub | Autenticação, tags por versão e push automático da imagem via GitHub Actions | Imagem publicada e reutilizável |
+| 08 | Servindo o Modelo via API | API FastAPI containerizada com endpoint de predição carregando o modelo treinado | API de inferência rodando em Docker |
+| 09 | Configurando o Ambiente de Produção | Variáveis de ambiente, logs e diferenças entre ambientes dev e prod no Docker | Pipeline completo local |
+| 10 | Pipeline End-to-End de ML em Produção | Revisão do fluxo completo de treino, build, push e serving com checklist técnico de ML | Projeto finalizado |
 
 ---
 
