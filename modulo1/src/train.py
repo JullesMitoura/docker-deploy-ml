@@ -1,8 +1,8 @@
 import os
-import sqlite3
 import pickle
 import numpy as np
 import pandas as pd
+from sqlalchemy import create_engine
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import cross_val_score
 from sklearn.metrics import mean_absolute_error, root_mean_squared_error, r2_score
@@ -11,20 +11,25 @@ from sklearn.metrics import mean_absolute_error, root_mean_squared_error, r2_sco
 DB_PATH    = os.getenv("DB_PATH",   "data/heat_exchanger.db")
 MODEL_DIR  = os.getenv("MODEL_DIR", "models")
 MODEL_PATH = os.path.join(MODEL_DIR, "model.pkl")
-REFERENCE_PATH = os.path.join(MODEL_DIR, "reference_data.pkl")
 
 
 def load_data(db_path: str) -> pd.DataFrame:
     print(f"Carregando dados de: {db_path}")
-    conn = sqlite3.connect(db_path)
+    engine = create_engine(f"sqlite:///{db_path}")
     df = pd.read_sql_query(
         "SELECT timestamp, heat_efficiency FROM heat_exchanger ORDER BY timestamp",
-        conn,
+        engine,
     )
-    conn.close()
 
     df["timestamp"] = pd.to_datetime(df["timestamp"])
     df["day_index"] = (df["timestamp"] - df["timestamp"].min()).dt.days
+
+    before = len(df)
+    df = df.dropna(subset=["timestamp", "heat_efficiency"])
+    dropped = before - len(df)
+    if dropped:
+        print(f"Removidos {dropped} registro(s) com valores ausentes.")
+
     print(
         f"Registros: {len(df)} | Período: "
         f"{df['timestamp'].min().date()} \u2192 {df['timestamp'].max().date()}"
@@ -54,11 +59,13 @@ def evaluate(model: LinearRegression, X: np.ndarray, y: np.ndarray):
 
 def save_artifacts(model: LinearRegression, df: pd.DataFrame):
     os.makedirs(MODEL_DIR, exist_ok=True)
+    artifact = {
+        "model": model,
+        "origin_date": df["timestamp"].min(),
+        "last_date": df["timestamp"].max(),
+    }
     with open(MODEL_PATH, "wb") as f:
-        pickle.dump(model, f)
-    reference_data = df[["timestamp", "day_index", "heat_efficiency"]].copy()
-    with open(REFERENCE_PATH, "wb") as f:
-        pickle.dump(reference_data, f)
+        pickle.dump(artifact, f)
 
 
 if __name__ == "__main__":
@@ -83,5 +90,4 @@ if __name__ == "__main__":
     print(f"  Tendência : {metrics['trend']:.4f}% por dia\n")
 
     save_artifacts(model, df)
-    print(f"Modelo salvo em     : {MODEL_PATH}")
-    print(f"Referência salva em : {REFERENCE_PATH}")
+    print(f"Modelo salvo em: {MODEL_PATH}")

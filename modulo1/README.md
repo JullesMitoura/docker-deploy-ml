@@ -75,7 +75,7 @@ projeto-ml/
 │   ├── train.py          # pipeline de treino
 │   └── inference.py      # lógica de predição
 ├── data/                 # dados brutos ou banco de dados
-├── models/               # artefatos gerados (modelo, referência, etc.)
+├── models/               # artefatos gerados (model.pkl)
 ├── requirements.txt      # dependências fixadas
 └── Dockerfile            # (será criado na Aula 02)
 ```
@@ -88,12 +88,12 @@ projeto-ml/
 
 Ao longo do curso usaremos dados reais de um **trocador de calor** (`heat_exchanger.db`):
 
-- **Período:** 2022-01-01 a 2022-06-30 (175 registros diários)
+- **Período:** 2025-09-29 a 2026-03-28 (175 registros)
 - **Tarefa:** modelar a degradação da eficiência térmica ao longo do tempo
 - **Modelo:** Regressão Linear Temporal
 - **Duas capacidades de inferência:**
   1. Dado uma **data** → prever a eficiência térmica esperada
-  2. Dado um **valor de eficiência** → encontrar as datas históricas mais próximas
+  2. Dado um **valor de eficiência** → estimar a data correspondente (histórico ou extrapolação futura)
 
 ### Dados disponíveis
 
@@ -145,7 +145,7 @@ jupyter notebook notebooks/
 
 | Notebook | Conteúdo |
 |----------|----------|
-| `eda.ipynb` | Análise exploratória completa: qualidade dos dados, evolução temporal, distribuições, correlações e quantificação da tendência de degradação |
+| `eda.ipynb` | Contexto do processo (trocador de calor casco-e-tubos), análise exploratória completa: qualidade dos dados, evolução temporal, distribuições, correlações e quantificação da tendência de degradação |
 | `model_evaluation.ipynb` | Comparação de algoritmos (LinearRegression, Ridge, Polinomial grau 2, RandomForest): métricas, curvas de predição, capacidade de extrapolação e análise de resíduos |
 
 > Os notebooks leem o banco diretamente de `../data/heat_exchanger.db`. Execute-os a partir da pasta `notebooks/` ou ajuste o `DB_PATH` conforme necessário.
@@ -161,7 +161,7 @@ python src/train.py
 Saída esperada:
 ```
 Carregando dados de: data/heat_exchanger.db
-Registros: 175 | Período: 2022-01-01 → 2022-06-30
+Registros: 175 | Período: 2025-09-29 → 2026-03-28
 Eficiência: min=93.23%  max=96.45%
 
 Treinando modelo de regressão linear temporal...
@@ -170,24 +170,23 @@ Treinando modelo de regressão linear temporal...
   MAE       : 0.0397%
   RMSE      : 0.0469%
   R²        : 0.9975
-  R² CV (5) : 0.7580 ± 0.2362
-  Tendência : -0.0179% por dia
+  R² CV (5) : 0.7580 ± 0.2363
+  Tendência : -0.0021% por dia
 
-Modelo salvo em     : models/model.pkl
-Referência salva em : models/reference_data.pkl
+Modelo salvo em: models/model.pkl
 ```
 
 ### 6. Execute a inferência
 
 ```bash
 # Modo 1 — prever eficiência para uma data
-python src/inference.py --date 2022-04-15
+python src/inference.py --date 2025-06-15
 
-# Modo 2 — encontrar as datas para uma eficiência alvo
-python src/inference.py --efficiency 94.5
+# Modo 2 — estimar a data para uma eficiência alvo (histórico)
+python src/inference.py --efficiency 80.0
 
-# Modo 2 com mais resultados
-python src/inference.py --efficiency 94.5 --top 5
+# Modo 2 — eficiência abaixo do mínimo histórico (extrapolação futura)
+python src/inference.py --efficiency 60.0
 ```
 
 ---
@@ -221,12 +220,12 @@ modulo1/
 ├── README.md             # este arquivo
 ├── requirements.txt      # dependências fixadas com versão
 ├── src/
-│   ├── train.py          # pipeline de treino: carrega DB → treina → salva artefatos
-│   └── inference.py      # dois modos: --date (eficiência) e --efficiency (data)
+│   ├── train.py          # pipeline de treino: carrega DB → treina → salva model.pkl
+│   └── inference.py      # dois modos: --date (eficiência) e --efficiency (data estimada)
 ├── notebooks/
-│   ├── eda.ipynb          # análise exploratória: qualidade, correlações e tendência de degradação
+│   ├── eda.ipynb          # contexto do processo + análise exploratória completa
 │   └── model_evaluation.ipynb  # comparação de modelos e justificativa da escolha final
-├── models/               # artefatos gerados: model.pkl e reference_data.pkl
+├── models/               # artefatos gerados: model.pkl
 └── data/
     └── heat_exchanger.db # banco SQLite com os dados do trocador de calor
 ```
@@ -239,7 +238,7 @@ modulo1/
 - [ ] Dependências instaladas via `requirements.txt`
 - [ ] `train.py` executa sem erros e salva artefatos em `models/`
 - [ ] `inference.py --date` retorna a eficiência prevista para uma data
-- [ ] `inference.py --efficiency` retorna as datas para uma eficiência alvo
+- [ ] `inference.py --efficiency` retorna a data estimada para uma eficiência alvo
 - [ ] `eda.ipynb` executa sem erros e exibe as análises exploratórias
 - [ ] `model_evaluation.ipynb` executa sem erros e exibe a comparação de modelos
 - [ ] Entendeu a estrutura de pastas e a separação de responsabilidades

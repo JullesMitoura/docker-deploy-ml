@@ -108,8 +108,10 @@ modulo2/
 ├── .dockerignore         # o que NÃO deve entrar na imagem
 ├── requirements.txt      # dependências fixadas com versão
 ├── src/
-│   ├── train.py          # pipeline de treino (idêntico ao modulo1)
-│   └── inference.py      # inferência (idêntico ao modulo1)
+│   ├── train.py          # pipeline de treino
+│   ├── inference.py      # inferência
+│   └── utils/
+│       └── logger.py     # configuração padrão de logging (lê LOG_LEVEL do ambiente)
 ├── data/
 │   └── heat_exchanger.db # banco SQLite com os dados
 └── models/               # artefatos gerados (vazios no repositório)
@@ -153,7 +155,7 @@ Saída esperada:
 2022-01-01 00:00:00 | INFO     | Dados carregados: 175 registros | período: 2022-01-01 → 2022-06-30
 2022-01-01 00:00:00 | INFO     | Iniciando treino — modelo: LinearRegression
 2022-01-01 00:00:00 | INFO     | Treino concluído — coef=-0.017900  intercept=96.4500
-2022-01-01 00:00:00 | INFO     | MAE=0.0397%  RMSE=0.0469%  R²=0.9975  ...
+2022-01-01 00:00:00 | INFO     | MAE=0.0397%  RMSE=0.0469%  R²=0.9975  R²_CV=0.9974±0.0003  Tendência=-0.0179%/dia
 2022-01-01 00:00:00 | INFO     | Modelo salvo: models/model.pkl
 ```
 
@@ -162,12 +164,14 @@ Saída esperada:
 Você pode alterar o comportamento do container sem reconstruir a imagem:
 
 ```bash
-# Aumentar verbosidade dos logs
+# Aumentar verbosidade dos logs (exibe detalhes internos do treino)
 docker run -e LOG_LEVEL=DEBUG heat-exchanger-train
 
 # Apontar para outro banco de dados
 docker run -e DB_PATH=data/outro_banco.db heat-exchanger-train
 ```
+
+Com `LOG_LEVEL=DEBUG` aparecem mensagens adicionais como faixa de eficiência e detalhes da regressão inversa durante a inferência.
 
 ### 5. Executando a inferência
 
