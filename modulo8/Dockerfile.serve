@@ -1,0 +1,75 @@
+# =============================================================================
+# Dockerfile.serve — Container de SERVING (FastAPI)
+#
+# Responsabilidade única: servir predições via HTTP.
+# Carrega o modelo no startup e mantém-o em memória para respostas em tempo real.
+#
+# Diferenças em relação ao Dockerfile.inference (CLI):
+#   - Expõe a porta 8000
+#   - Roda uvicorn (servidor ASGI) em vez de um script Python direto
+#   - Fica em execução contínua (não encerra após uma predição)
+#   - PYTHONPATH=/app/src permite que uvicorn encontre src/app.py e utils/
+# =============================================================================
+FROM python:3.11-slim AS builder
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /build
+
+# requirements-serve.txt: fastapi + uvicorn + scikit-learn + pandas + numpy
+# (sem sqlalchemy — a API não acessa o banco de dados)
+COPY requirements-serve.txt .
+RUN pip install --no-cache-dir --prefix=/install -r requirements-serve.txt
+
+
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY --from=builder /install /usr/local
+
+# Copia apenas o código-fonte — o modelo chega via volume em runtime
+COPY src/ src/
+
+
+# =============================================================================
+# Variáveis de ambiente
+#
+# PYTHONPATH   → permite que uvicorn importe app.py e utils/ de src/
+# MODEL_DIR    → pasta onde o volume de modelos será montado
+# MODEL_VERSION → versão específica a carregar (vazio = latest)
+# PORT         → porta HTTP da API (pode ser sobrescrita em runtime)
+# =============================================================================
+ENV PYTHONPATH=/app/src \
+    MODEL_DIR=models \
+    MODEL_VERSION="" \
+    LOG_LEVEL=INFO \
+    PYTHONUNBUFFERED=1 \
+    PORT=8000
+
+
+# =============================================================================
+# Porta exposta
+#
+# EXPOSE documenta a porta — não a publica automaticamente.
+# Para publicar, use -p na chamada docker run:
+#   docker run -p 8000:8000 heat-exchanger-serve
+# =============================================================================
+EXPOSE 8000
+
+
+# =============================================================================
+# Comando de serving
+#
+# Fluxo de startup:
+#   1. uvicorn importa app.py via PYTHONPATH
+#   2. lifespan() carrega o model.pkl do volume montado em /app/models
+#   3. API fica disponível em http://localhost:8000
+#
+# Para carregar uma versão específica:
+#   docker run -e MODEL_VERSION=20240101_143052 -p 8000:8000 \
+#     -v $(pwd)/models:/app/models heat-exchanger-serve
+# =============================================================================
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]

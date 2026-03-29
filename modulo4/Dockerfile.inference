@@ -1,0 +1,71 @@
+# =============================================================================
+# Dockerfile.inference — Multi-stage build para INFERÊNCIA
+#
+# A imagem de inferência é ainda mais enxuta que a de treino:
+#   - Sem sqlalchemy (não acessa banco de dados)
+#   - Multi-stage elimina gcc e ferramentas de build
+#   - Sem data/ (modelo fornecido via volume)
+#
+# Comparação com o Dockerfile.inference do módulo 03:
+#   Módulo 03 (single-stage): ~710 MB
+#   Módulo 04 (multi-stage) : ~390 MB  ← mesma funcionalidade, imagem menor
+# =============================================================================
+
+
+# =============================================================================
+# Stage 1 — builder
+#
+# Instala as dependências de inferência em um diretório isolado.
+# gcc disponível aqui apenas para pacotes que precisam compilar extensões C.
+# =============================================================================
+FROM python:3.11-slim AS builder
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /build
+
+COPY requirements-inference.txt .
+RUN pip install --no-cache-dir --prefix=/install -r requirements-inference.txt
+
+
+# =============================================================================
+# Stage 2 — runtime
+#
+# Imagem final mínima: apenas Python + scikit-learn + pandas + numpy.
+# Sem gcc, sem sqlalchemy, sem dados.
+# =============================================================================
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY --from=builder /install /usr/local
+
+# Apenas o código-fonte — sem data/
+COPY src/ src/
+
+
+# =============================================================================
+# Variáveis de ambiente
+#
+# MODEL_DIR aponta para onde o volume será montado em runtime.
+# DB_PATH ausente — inferência não acessa banco de dados.
+# =============================================================================
+ENV MODEL_DIR=models \
+    LOG_LEVEL=INFO \
+    PYTHONUNBUFFERED=1
+
+
+# =============================================================================
+# Entrypoint de inferência
+#
+#   docker build -f Dockerfile.inference -t heat-exchanger-inference .
+#
+#   docker run -v $(pwd)/models:/app/models heat-exchanger-inference \
+#     python src/inference.py --date 2022-04-15
+#
+#   docker run -v $(pwd)/models:/app/models heat-exchanger-inference \
+#     python src/inference.py --efficiency 94.5
+# =============================================================================
+CMD ["python", "src/inference.py", "--help"]

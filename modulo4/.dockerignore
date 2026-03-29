@@ -1,0 +1,69 @@
+# =============================================================================
+# .dockerignore — Módulo 04: Otimização de imagens
+#
+# Um .dockerignore bem calibrado tem dois efeitos diretos:
+#   1. Reduz o contexto enviado ao daemon Docker no build (mais rápido)
+#   2. Evita que arquivos desnecessários entrem em camadas da imagem
+#
+# Regras: padrões glob, um por linha. Prefixo "!" nega (inclui de volta).
+# =============================================================================
+
+# Ambiente virtual local
+.venv/
+venv/
+env/
+
+# Bytecode Python — gerado em runtime, não deve entrar na imagem
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Artefatos de modelo — fornecidos via volume em produção
+models/
+*.pkl
+*.joblib
+*.h5
+*.pt
+*.onnx
+
+# Controle de versão
+.git/
+.gitignore
+.gitattributes
+
+# Documentação e metadados do projeto
+*.md
+*.rst
+*.txt
+!requirements*.txt
+
+# Notebooks — não fazem parte do container de produção
+notebooks/
+*.ipynb
+.ipynb_checkpoints/
+
+# IDEs e editores
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Testes e cobertura
+tests/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# CI/CD e configuração de ambiente
+.github/
+.env
+.env.*
+*.env
+
+# Logs locais
+*.log
+logs/

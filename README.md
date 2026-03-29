@@ -18,8 +18,9 @@
 
 ![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=flat-square&logo=python&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white)
+![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=flat-square&logo=github-actions&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)
 ![scikit-learn](https://img.shields.io/badge/scikit--learn-F7931E?style=flat-square&logo=scikit-learn&logoColor=white)
-
 
 <img width="80%" src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif"/>
 
@@ -28,24 +29,24 @@
 # Docker: Machine Learning para Produção
 > Foco: Engenharia de ML, Reprodutibilidade, Produção, Workflow real
 
-Curso prático que conduz o aluno desde a organização de um projeto de ML até o deploy completo de um modelo em produção usando Docker — com CI/CD, versionamento de artefatos e serving via API.
+Curso prático que conduz o aluno desde a organização de um projeto de ML até o deploy completo de um modelo em produção usando Docker — com CI/CD, versionamento de artefatos e serving via API REST.
 
 ---
 
 ## Estrutura do Curso
 
-| Modulo | Tema | Resumo | Entrega |
-|------|------|--------|---------|
-| 01 | [Setup do Projeto de ML](./modulo1/) | Estrutura do projeto, script de treino e inferência rodando localmente | Repositório base funcional, projeto rodando localmente |
-| 02 | [Containerizando o Projeto](./modulo2/) | Primeiro Dockerfile, instalação de dependências e execução do treino em container | Projeto rodando em container |
-| 03 | Treino e Inferência em Containers Separados | Dockerfiles distintos para treino e inferência com dependências e entrypoints isolados | Dois containers com responsabilidades claras |
-| 04 | Otimizando Imagens Docker para ML | Multi-stage build, cache de dependências e redução do tamanho final da imagem | Imagens menores e mais rápidas |
-| 05 | Persistindo e Versionando o Modelo | Uso de volumes para salvar o modelo fora do container e versionamento manual de artefatos | Modelo versionado fora da imagem |
-| 06 | Automatizando o Build com GitHub Actions | Workflow de CI com build automático, teste do container e cache de build | CI funcionando |
-| 07 | Publicando a Imagem no Docker Hub | Autenticação, tags por versão e push automático da imagem via GitHub Actions | Imagem publicada e reutilizável |
-| 08 | Servindo o Modelo via API | API FastAPI containerizada com endpoint de predição carregando o modelo treinado | API de inferência rodando em Docker |
-| 09 | Configurando o Ambiente de Produção | Variáveis de ambiente, logs e diferenças entre ambientes dev e prod no Docker | Pipeline completo local |
-| 10 | Pipeline End-to-End de ML em Produção | Revisão do fluxo completo de treino, build, push e serving com checklist técnico de ML | Projeto finalizado |
+| Módulo | Tema | Entrega | Conceito central |
+|--------|------|---------|-----------------|
+| [01](./modulo1/) | Setup do Projeto de ML | Repositório base funcional, projeto rodando localmente | Estrutura de projeto de ML, `train.py`, `inference.py` |
+| [02](./modulo2/) | Containerizando o Projeto | Projeto rodando em container | Dockerfile, imagem base, variáveis de ambiente, cache de layers |
+| [03](./modulo3/) | Treino e Inferência Separados | Dois containers com responsabilidades claras | Responsabilidade única, `Dockerfile.train`, `Dockerfile.inference`, volumes |
+| [04](./modulo4/) | Otimizando Imagens | Imagens menores e mais rápidas | Multi-stage build, `.dockerignore`, estratégia de cache |
+| [05](./modulo5/) | Versionando Artefatos | Modelo versionado fora da imagem | `model_{tag}.pkl`, `registry.json`, `model_latest.pkl`, rollback |
+| [06](./modulo6/) | CI com GitHub Actions | CI funcionando | Workflow YAML, jobs paralelos, artefatos entre jobs, cache GHA |
+| [07](./modulo7/) | Publicando no Docker Hub | Imagem publicada e reutilizável | `docker/login-action`, `metadata-action`, estratégia de branches e tags |
+| [08](./modulo8/) | Serving via API | API de inferência rodando em Docker | FastAPI, uvicorn, `lifespan`, endpoints REST, `PYTHONPATH` |
+| [09](./modulo9/) | Ambiente de Produção | Pipeline completo local | Docker Compose, `depends_on`, `HEALTHCHECK`, dev vs prod, `.env` |
+| [10](./modulo10/) | Workflow End-to-End | Projeto finalizado | Makefile, smoke test no CI, pipeline treino → build → push → serving |
 
 ---
 
@@ -53,27 +54,59 @@ Curso prático que conduz o aluno desde a organização de um projeto de ML até
 
 O projeto de ML usado ao longo do curso é um **modelo de monitoramento de trocador de calor** com `scikit-learn`. A escolha foi intencional:
 
-- Dataset leve, com dados reais de sensores industriais (175 registros diários)
-- Problema de regressão com tendência temporal clara
-- Fácil de entender, mas com estrutura de código similar à produção
-- Permite demonstrar todos os conceitos de Docker sem distração de complexidade de dados
+- Dataset leve com dados reais de sensores industriais (175 registros diários)
+- Problema de regressão com tendência temporal clara e interpretável
+- Código com estrutura similar à produção, sem distração de complexidade de dados
+- Permite demonstrar todos os conceitos de Docker do zero ao deploy
 
 ### O problema
 
 Modelar a **degradação da eficiência térmica** ao longo do tempo (~-0.018% por dia), com duas capacidades de inferência:
+
 1. Dado uma **data** → prever a eficiência esperada
-2. Dado um **valor de eficiência** → encontrar as datas históricas mais próximas
+2. Dado um **valor de eficiência** → estimar a data correspondente (histórico ou extrapolação)
 
 ---
 
 ## Jornada do Aluno
 
 ```
-Aula 01-02 → Projeto rodando em container
-Aula 03-05 → Boas práticas de Docker para ML
-Aula 06-07 → Automação com CI/CD
-Aula 08-09 → Serving e ambiente de produção
-Aula 10    → Pipeline end-to-end completo
+Módulos 01–02   Projeto rodando em container
+     │
+     ▼
+Módulos 03–05   Boas práticas de Docker para ML
+     │           (responsabilidade única, multi-stage, versionamento)
+     ▼
+Módulos 06–07   Automação com CI/CD
+     │           (GitHub Actions, Docker Hub, estratégia de branches)
+     ▼
+Módulos 08–09   Serving e ambiente de produção
+     │           (FastAPI, Docker Compose, HEALTHCHECK, dev vs prod)
+     ▼
+Módulo 10       Pipeline end-to-end completo
+                (Makefile, smoke test, checklist de produção)
+```
+
+---
+
+## Evolução do projeto módulo a módulo
+
+```
+modulo1/                    modulo5/                    modulo9/
+├── src/                    ├── src/                    ├── src/
+│   ├── train.py            │   ├── train.py ←─ versioning   │   ├── train.py
+│   └── inference.py        │   ├── inference.py        │   ├── app.py  ← FastAPI
+├── data/                   │   └── utils/              │   └── utils/
+└── requirements.txt        │       ├── logger.py       ├── Dockerfile.train
+                            │       └── versioning.py   ├── Dockerfile.serve
+modulo2/                    ├── Dockerfile.train        ├── docker-compose.yml
+├── Dockerfile ← 1 stage    ├── Dockerfile.inference    ├── .env.example
+└── ...                     ├── requirements-*.txt      └── ...
+                            └── models/
+modulo4/                        ├── model_{tag}.pkl     modulo10/
+├── Dockerfile.train ← multi   ├── model_latest.pkl    ├── Makefile
+├── Dockerfile.inference        └── registry.json       ├── docker-compose.yml
+└── .dockerignore aprimorado                            └── ...
 ```
 
 ---
@@ -81,16 +114,26 @@ Aula 10    → Pipeline end-to-end completo
 ## Pré-requisitos
 
 - Python 3.11
-- Docker instalado e rodando
+- Docker Desktop instalado e rodando
 - Git e conta no GitHub
-- Conta no Docker Hub (necessário a partir da Aula 7)
+- Conta no Docker Hub (necessário a partir do módulo 7)
+
+---
+
+## GitHub Actions Workflows
+
+| Workflow | Disparo | O que faz |
+|----------|---------|-----------|
+| [`modulo6-ci.yml`](.github/workflows/modulo6-ci.yml) | Push/PR em `modulo6/**` | Build paralelo + testes de integração |
+| [`modulo7-cd.yml`](.github/workflows/modulo7-cd.yml) | Push/PR em `modulo7/**` | Build + testes + push ao Docker Hub |
+| [`modulo10-pipeline.yml`](.github/workflows/modulo10-pipeline.yml) | Push/PR em `modulo10/**` | Pipeline completo com smoke test da API |
 
 ---
 
 ## Como navegar
 
 Cada módulo tem seu próprio `README.md` com:
-- Contexto teórico da aula
-- Passo a passo prático
-- Comandos prontos para executar
+- Contexto teórico: o problema que o módulo resolve
+- Passo a passo prático com comandos prontos
+- Comparação com o módulo anterior
 - Checklist de entrega

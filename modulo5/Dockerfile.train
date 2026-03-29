@@ -1,0 +1,55 @@
+# =============================================================================
+# Dockerfile.train — Container de TREINO com versionamento de artefatos
+#
+# Novidade deste módulo: o container agora gera artefatos versionados.
+# A cada execução são criados:
+#   - model_{YYYYMMDD_HHMMSS}.pkl  → artefato imutável e rastreável
+#   - model_latest.pkl              → ponteiro para a versão mais recente
+#   - registry.json                 → índice com metadados de todas as versões
+#
+# Todos os artefatos são escritos no volume montado em MODEL_DIR.
+# =============================================================================
+FROM python:3.11-slim AS builder
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /build
+
+COPY requirements-train.txt .
+RUN pip install --no-cache-dir --prefix=/install -r requirements-train.txt
+
+
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY --from=builder /install /usr/local
+
+COPY src/  src/
+COPY data/ data/
+
+
+# =============================================================================
+# Variáveis de ambiente
+#
+# MODEL_DIR → pasta do volume onde os artefatos serão persistidos
+# LOG_LEVEL → nível de log (INFO por padrão, DEBUG para detalhes de versão)
+# =============================================================================
+ENV DB_PATH=data/heat_exchanger.db \
+    MODEL_DIR=models \
+    LOG_LEVEL=INFO \
+    PYTHONUNBUFFERED=1
+
+
+# =============================================================================
+# Entrypoint de treino
+#
+# Execução básica (gera nova versão versionada + atualiza latest):
+#   docker run -v $(pwd)/models:/app/models heat-exchanger-train
+#
+# Com mais verbosidade (exibe tag da versão gerada):
+#   docker run -v $(pwd)/models:/app/models -e LOG_LEVEL=DEBUG heat-exchanger-train
+# =============================================================================
+CMD ["python", "src/train.py"]

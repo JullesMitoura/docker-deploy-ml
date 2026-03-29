@@ -1,0 +1,78 @@
+# =============================================================================
+# Dockerfile.train — Container de TREINO
+#
+# Responsabilidade única: carregar os dados, treinar o modelo e salvar o
+# artefato (model.pkl) em um volume compartilhado.
+#
+# Este container NUNCA faz inferência.
+# =============================================================================
+
+
+# =============================================================================
+# Imagem base
+#
+# python:3.11-slim garante um ambiente Python reproduzível e enxuto.
+# A versão é fixada para evitar surpresas em builds futuros.
+# =============================================================================
+FROM python:3.11-slim
+
+
+WORKDIR /app
+
+
+# =============================================================================
+# Dependências de TREINO
+#
+# requirements-train.txt contém tudo que o pipeline de treino precisa:
+#   - scikit-learn  → algoritmo de regressão e métricas
+#   - pandas        → leitura e manipulação dos dados
+#   - numpy         → operações vetoriais
+#   - sqlalchemy    → acesso ao banco SQLite
+#
+# A inferência NÃO precisa de sqlalchemy — ela lê apenas o model.pkl.
+# Separar os requirements garante que cada imagem carregue só o necessário.
+# =============================================================================
+COPY requirements-train.txt .
+RUN pip install --no-cache-dir -r requirements-train.txt
+
+
+# =============================================================================
+# Código-fonte e dados
+#
+# O container de treino precisa de:
+#   - src/          → código Python (train.py + utils/)
+#   - data/         → banco SQLite com os dados históricos
+#
+# Não copiamos models/ — o modelo será escrito em runtime via volume,
+# ficando disponível para o container de inferência.
+# =============================================================================
+COPY src/  src/
+COPY data/ data/
+
+
+# =============================================================================
+# Variáveis de ambiente
+#
+# DB_PATH   → onde o banco SQLite está montado dentro do container
+# MODEL_DIR → onde o model.pkl será salvo (deve coincidir com o volume montado)
+# LOG_LEVEL → nível de log (INFO por padrão, DEBUG para mais detalhes)
+# PYTHONUNBUFFERED → logs em tempo real, sem buffer de saída
+# =============================================================================
+ENV DB_PATH=data/heat_exchanger.db \
+    MODEL_DIR=models \
+    LOG_LEVEL=INFO \
+    PYTHONUNBUFFERED=1
+
+
+# =============================================================================
+# Entrypoint de treino
+#
+# Este container sempre executa o treino. O artefato gerado (model.pkl) é
+# escrito em MODEL_DIR — que em produção será um volume compartilhado:
+#
+#   docker run -v $(pwd)/models:/app/models heat-exchanger-train
+#
+# Após o container parar, o model.pkl persiste no diretório local ./models/
+# e pode ser montado no container de inferência.
+# =============================================================================
+CMD ["python", "src/train.py"]

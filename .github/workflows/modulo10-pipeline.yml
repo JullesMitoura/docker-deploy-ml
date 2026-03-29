@@ -1,0 +1,237 @@
+# =============================================================================
+# Workflow: Modulo 10 — Pipeline End-to-End
+#
+# Pipeline completo: commit → build → test → push → smoke test de serving
+#
+# Fluxo:
+#
+#   build-train ──┐
+#                 ├──► test ──► publish ──► smoke-test
+#   build-serve ──┘
+#
+# Etapas:
+#   1. build-train  → builda imagem de treino (com cache GHA)
+#   2. build-serve  → builda imagem de serving (com cache GHA)
+#   3. test         → treino + verificação de artefatos + predições CLI
+#   4. publish      → push ao Docker Hub com tags semver (apenas main/tag)
+#   5. smoke-test   → sobe a API publicada e verifica /health via HTTP
+#
+# Pré-requisitos (Secrets):
+#   DOCKERHUB_USERNAME → usuário do Docker Hub
+#   DOCKERHUB_TOKEN    → Access Token do Docker Hub
+# =============================================================================
+
+name: Modulo 10 — Pipeline End-to-End
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*.*.*"]
+    paths:
+      - "modulo10/**"
+      - ".github/workflows/modulo10-pipeline.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "modulo10/**"
+      - ".github/workflows/modulo10-pipeline.yml"
+
+  workflow_dispatch:
+
+env:
+  IMAGE_TRAIN: ${{ secrets.DOCKERHUB_USERNAME }}/heat-exchanger-train
+  IMAGE_SERVE: ${{ secrets.DOCKERHUB_USERNAME }}/heat-exchanger-serve
+
+jobs:
+  # ===========================================================================
+  # Job 1: Build da imagem de TREINO
+  # ===========================================================================
+  build-train:
+    name: Build — imagem de treino
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Login no Docker Hub
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Gerar tags
+        id: meta-train
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_TRAIN }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix=
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+
+      - name: Build e push
+        uses: docker/build-push-action@v5
+        with:
+          context: modulo10
+          file: modulo10/Dockerfile.train
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta-train.outputs.tags }}
+          labels: ${{ steps.meta-train.outputs.labels }}
+          cache-from: type=gha,scope=mod10-train
+          cache-to: type=gha,scope=mod10-train,mode=max
+          outputs: type=docker,dest=/tmp/train.tar
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: train-image
+          path: /tmp/train.tar
+          retention-days: 1
+
+  # ===========================================================================
+  # Job 2: Build da imagem de SERVING
+  # ===========================================================================
+  build-serve:
+    name: Build — imagem de serving
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Login no Docker Hub
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Gerar tags
+        id: meta-serve
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_SERVE }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix=
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+
+      - name: Build e push
+        uses: docker/build-push-action@v5
+        with:
+          context: modulo10
+          file: modulo10/Dockerfile.serve
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta-serve.outputs.tags }}
+          labels: ${{ steps.meta-serve.outputs.labels }}
+          cache-from: type=gha,scope=mod10-serve
+          cache-to: type=gha,scope=mod10-serve,mode=max
+          outputs: type=docker,dest=/tmp/serve.tar
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: serve-image
+          path: /tmp/serve.tar
+          retention-days: 1
+
+  # ===========================================================================
+  # Job 3: Testes de integração — pipeline CLI (treino + inferência)
+  # ===========================================================================
+  test:
+    name: Teste — integração completa
+    runs-on: ubuntu-latest
+    needs: [build-train, build-serve]
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: "*-image"
+          path: /tmp
+
+      - name: Carregar imagens
+        run: |
+          docker load -i /tmp/train-image/train.tar
+          docker load -i /tmp/serve-image/serve.tar
+
+      - name: Criar diretório de modelos
+        run: mkdir -p models
+
+      - name: Executar treino
+        run: |
+          docker run --rm \
+            -v $(pwd)/models:/app/models \
+            heat-exchanger-train:${{ github.sha }}
+
+      - name: Verificar artefatos
+        run: |
+          test -f models/model_latest.pkl && echo "OK: model_latest.pkl"
+          test -f models/registry.json    && echo "OK: registry.json"
+          cat models/registry.json
+
+      - name: Inferência CLI — por data
+        run: |
+          docker run --rm \
+            -v $(pwd)/models:/app/models \
+            heat-exchanger-train:${{ github.sha }} \
+            python src/inference.py --date 2022-04-15
+
+      - name: Inferência CLI — por eficiência
+        run: |
+          docker run --rm \
+            -v $(pwd)/models:/app/models \
+            heat-exchanger-train:${{ github.sha }} \
+            python src/inference.py --efficiency 94.5
+
+      # -----------------------------------------------------------------------
+      # Smoke test da API de serving (pipeline completo end-to-end)
+      # -----------------------------------------------------------------------
+      - name: Subir API de serving
+        run: |
+          docker run -d \
+            --name heat-serve-ci \
+            -v $(pwd)/models:/app/models \
+            -p 8000:8000 \
+            heat-exchanger-serve:${{ github.sha }}
+
+      - name: Aguardar API ficar healthy
+        run: |
+          echo "Aguardando API..."
+          for i in $(seq 1 12); do
+            if curl -sf http://localhost:8000/health > /dev/null 2>&1; then
+              echo "API respondeu após ${i}s"
+              break
+            fi
+            sleep 5
+          done
+          curl -sf http://localhost:8000/health || (docker logs heat-serve-ci && exit 1)
+
+      - name: Smoke test — GET /health
+        run: curl -sf http://localhost:8000/health | python3 -m json.tool
+
+      - name: Smoke test — POST /predict/date
+        run: |
+          curl -sf -X POST http://localhost:8000/predict/date \
+            -H "Content-Type: application/json" \
+            -d '{"date": "2022-04-15"}' | python3 -m json.tool
+
+      - name: Smoke test — POST /predict/efficiency
+        run: |
+          curl -sf -X POST http://localhost:8000/predict/efficiency \
+            -H "Content-Type: application/json" \
+            -d '{"efficiency": 94.5}' | python3 -m json.tool
+
+      - name: Smoke test — GET /versions
+        run: curl -sf http://localhost:8000/versions | python3 -m json.tool
+
+      - name: Remover container de serving do CI
+        if: always()
+        run: docker stop heat-serve-ci && docker rm heat-serve-ci

@@ -1,0 +1,34 @@
+# docker-compose.yml — Pipeline completo (módulo 10)
+services:
+  train:
+    build:
+      context: .
+      dockerfile: Dockerfile.train
+    volumes:
+      - models:/app/models
+    env_file:
+      - .env
+    environment:
+      PYTHONUNBUFFERED: "1"
+    restart: "no"
+
+  serve:
+    build:
+      context: .
+      dockerfile: Dockerfile.serve
+    ports:
+      - "${PORT:-8000}:8000"
+    volumes:
+      - models:/app/models
+    env_file:
+      - .env
+    environment:
+      PYTHONUNBUFFERED: "1"
+    restart: unless-stopped
+    depends_on:
+      train:
+        condition: service_completed_successfully
+
+volumes:
+  models:
+    name: modulo10_models

@@ -1,0 +1,180 @@
+# =============================================================================
+# Workflow: Modulo 6 — CI Pipeline
+#
+# Objetivo: construir e testar automaticamente as imagens Docker do projeto
+# a cada push ou pull request que altere arquivos do módulo 6.
+#
+# Estrutura de jobs:
+#
+#   build-train ──────────────────────────────► test
+#                                              ▲
+#   build-inference ──────────────────────────┘
+#
+# Os jobs de build rodam em paralelo. O job de teste só começa após
+# ambos os builds concluírem com sucesso (needs: [build-train, build-inference]).
+# =============================================================================
+
+name: Modulo 6 — CI Pipeline
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "modulo6/**"
+      - ".github/workflows/modulo6-ci.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "modulo6/**"
+      - ".github/workflows/modulo6-ci.yml"
+
+  # Permite disparar o workflow manualmente pela interface do GitHub
+  workflow_dispatch:
+
+jobs:
+  # ===========================================================================
+  # Job 1: Build da imagem de TREINO
+  #
+  # - Usa Docker Buildx para suporte ao cache do GitHub Actions (type=gha)
+  # - Exporta a imagem como tarball para compartilhar com o job de teste
+  # - Cache com escopo "train" — não interfere com o cache da inferência
+  # ===========================================================================
+  build-train:
+    name: Build — imagem de treino
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build heat-exchanger-train
+        uses: docker/build-push-action@v5
+        with:
+          context: modulo6
+          file: modulo6/Dockerfile.train
+          push: false
+          tags: heat-exchanger-train:${{ github.sha }}
+          # Cache de build armazenado no GitHub Actions Cache
+          # Na primeira execução: miss (build completo ~3 min)
+          # Nas seguintes:        hit  (apenas camadas alteradas)
+          cache-from: type=gha,scope=train
+          cache-to: type=gha,scope=train,mode=max
+          # Exporta a imagem como arquivo para uso no job de teste
+          outputs: type=docker,dest=/tmp/train.tar
+
+      - name: Publicar imagem como artefato de CI
+        uses: actions/upload-artifact@v4
+        with:
+          name: train-image
+          path: /tmp/train.tar
+          # Artefatos ficam disponíveis por 1 dia — suficiente para o pipeline
+          retention-days: 1
+
+  # ===========================================================================
+  # Job 2: Build da imagem de INFERÊNCIA
+  #
+  # Roda em paralelo com build-train — os dois builds são independentes.
+  # ===========================================================================
+  build-inference:
+    name: Build — imagem de inferência
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build heat-exchanger-inference
+        uses: docker/build-push-action@v5
+        with:
+          context: modulo6
+          file: modulo6/Dockerfile.inference
+          push: false
+          tags: heat-exchanger-inference:${{ github.sha }}
+          cache-from: type=gha,scope=inference
+          cache-to: type=gha,scope=inference,mode=max
+          outputs: type=docker,dest=/tmp/inference.tar
+
+      - name: Publicar imagem como artefato de CI
+        uses: actions/upload-artifact@v4
+        with:
+          name: inference-image
+          path: /tmp/inference.tar
+          retention-days: 1
+
+  # ===========================================================================
+  # Job 3: Testes de integração
+  #
+  # Depende dos dois builds — só executa após ambos terminarem com sucesso.
+  # Verifica o fluxo completo: treino → artefato gerado → inferência.
+  # ===========================================================================
+  test:
+    name: Teste — integração treino + inferência
+    runs-on: ubuntu-latest
+    needs: [build-train, build-inference]
+
+    steps:
+      - name: Download das imagens
+        uses: actions/download-artifact@v4
+        with:
+          # Baixa todos os artefatos com nome "*-image" para /tmp
+          pattern: "*-image"
+          path: /tmp
+
+      - name: Carregar imagens no Docker local
+        run: |
+          docker load -i /tmp/train-image/train.tar
+          docker load -i /tmp/inference-image/inference.tar
+
+      - name: Criar diretório de modelos compartilhado
+        run: mkdir -p models
+
+      # -----------------------------------------------------------------------
+      # Teste 1: container de treino executa e gera artefatos
+      # -----------------------------------------------------------------------
+      - name: Executar treino
+        run: |
+          docker run \
+            -v $(pwd)/models:/app/models \
+            heat-exchanger-train:${{ github.sha }}
+
+      - name: Verificar artefatos gerados
+        run: |
+          echo "=== Conteúdo de models/ ==="
+          ls -lh models/
+
+          echo "=== Verificando model_latest.pkl ==="
+          test -f models/model_latest.pkl && echo "OK: model_latest.pkl existe"
+
+          echo "=== Verificando registry.json ==="
+          test -f models/registry.json && echo "OK: registry.json existe"
+          cat models/registry.json
+
+      # -----------------------------------------------------------------------
+      # Teste 2: container de inferência lê o modelo e responde predições
+      # -----------------------------------------------------------------------
+      - name: Inferência — prever eficiência por data
+        run: |
+          docker run \
+            -v $(pwd)/models:/app/models \
+            heat-exchanger-inference:${{ github.sha }} \
+            python src/inference.py --date 2022-04-15
+
+      - name: Inferência — estimar data para eficiência alvo
+        run: |
+          docker run \
+            -v $(pwd)/models:/app/models \
+            heat-exchanger-inference:${{ github.sha }} \
+            python src/inference.py --efficiency 94.5
+
+      - name: Listar versões registradas
+        run: |
+          docker run \
+            -v $(pwd)/models:/app/models \
+            heat-exchanger-inference:${{ github.sha }} \
+            python src/inference.py --list-versions

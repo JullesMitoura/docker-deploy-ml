@@ -6,7 +6,7 @@ __pycache__/
 *.pyc
 *.pyo
 
-# Artefatos gerados — o container os produz em runtime
+# Artefatos de modelo — compartilhados via volume entre containers
 models/
 
 # Git

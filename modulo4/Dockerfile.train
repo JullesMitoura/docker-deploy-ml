@@ -1,0 +1,78 @@
+# =============================================================================
+# Dockerfile.train — Multi-stage build para TREINO
+#
+# O multi-stage build divide a construção em etapas independentes.
+# Apenas os artefatos necessários são copiados para a imagem final —
+# ferramentas de compilação e cache de build ficam de fora.
+#
+# Comparação com o Dockerfile.train do módulo 03:
+#   Módulo 03 (single-stage): ~780 MB
+#   Módulo 04 (multi-stage) : ~430 MB  ← mesmo ambiente, imagem menor
+# =============================================================================
+
+
+# =============================================================================
+# Stage 1 — builder
+#
+# Responsabilidade: instalar TODAS as dependências (incluindo ferramentas de
+# compilação que alguns pacotes Python precisam para buildar extensões C).
+#
+# "AS builder" nomeia este stage — permite referenciá-lo no stage seguinte
+# com COPY --from=builder.
+# =============================================================================
+FROM python:3.11-slim AS builder
+
+# Ferramentas de compilação necessárias para pacotes com extensões C
+# (ex: numpy, scipy). Ficam APENAS neste stage — não entram na imagem final.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /build
+
+# --prefix=/install direciona todos os pacotes para /build/install
+# em vez de instalar no Python global deste stage.
+# Isso nos permite copiar apenas /build/install para a imagem final.
+COPY requirements-train.txt .
+RUN pip install --no-cache-dir --prefix=/install -r requirements-train.txt
+
+
+# =============================================================================
+# Stage 2 — runtime
+#
+# Imagem final: Python puro + pacotes copiados do builder.
+# gcc e ferramentas de build NÃO estão aqui — imagem significativamente menor.
+#
+# FROM python:3.11-slim aqui é uma imagem NOVA, zerada.
+# Apenas o que foi explicitamente copiado do builder estará presente.
+# =============================================================================
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Copia os pacotes instalados pelo builder para o Python desta imagem.
+# /install foi criado com --prefix, então mapeia corretamente para
+# /usr/local (lib, bin, etc.) dentro do container final.
+COPY --from=builder /install /usr/local
+
+# Código-fonte e dados — copiados direto do contexto de build (não do builder)
+COPY src/  src/
+COPY data/ data/
+
+
+# =============================================================================
+# Variáveis de ambiente
+# =============================================================================
+ENV DB_PATH=data/heat_exchanger.db \
+    MODEL_DIR=models \
+    LOG_LEVEL=INFO \
+    PYTHONUNBUFFERED=1
+
+
+# =============================================================================
+# Entrypoint de treino
+#
+#   docker build -f Dockerfile.train -t heat-exchanger-train .
+#   docker run -v $(pwd)/models:/app/models heat-exchanger-train
+# =============================================================================
+CMD ["python", "src/train.py"]

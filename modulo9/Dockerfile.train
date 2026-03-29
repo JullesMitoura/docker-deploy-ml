@@ -1,0 +1,30 @@
+# =============================================================================
+# Dockerfile.train — Container de TREINO (mesmo do módulo 05)
+# =============================================================================
+FROM python:3.11-slim AS builder
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /build
+
+COPY requirements-train.txt .
+RUN pip install --no-cache-dir --prefix=/install -r requirements-train.txt
+
+
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY --from=builder /install /usr/local
+
+COPY src/  src/
+COPY data/ data/
+
+ENV DB_PATH=data/heat_exchanger.db \
+    MODEL_DIR=models \
+    LOG_LEVEL=INFO \
+    PYTHONUNBUFFERED=1
+
+CMD ["python", "src/train.py"]

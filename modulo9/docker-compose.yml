@@ -1,0 +1,71 @@
+# =============================================================================
+# docker-compose.yml — Pipeline completo local (modo produção)
+#
+# Serviços:
+#   train → executa treino uma vez e encerra
+#   serve → sobe a API e fica em execução contínua
+#
+# O serviço 'serve' só inicia após 'train' concluir com sucesso
+# (depends_on: condition: service_completed_successfully).
+#
+# Uso:
+#   cp .env.example .env          # crie o arquivo de variáveis
+#   docker compose up             # treino + serving completo
+#   docker compose up serve       # apenas serving (modelo já existente)
+#   docker compose down           # para tudo
+# =============================================================================
+
+services:
+
+  # ===========================================================================
+  # train — executa o pipeline de treino e gera os artefatos versionados
+  # ===========================================================================
+  train:
+    build:
+      context: .
+      dockerfile: Dockerfile.train
+    volumes:
+      - models:/app/models
+    env_file:
+      - .env
+    environment:
+      PYTHONUNBUFFERED: "1"
+    # restart: "no" → treino roda uma vez e encerra (padrão do Compose)
+    restart: "no"
+
+  # ===========================================================================
+  # serve — API FastAPI que fica em execução contínua
+  # ===========================================================================
+  serve:
+    build:
+      context: .
+      dockerfile: Dockerfile.serve
+    ports:
+      - "${PORT:-8000}:8000"
+    volumes:
+      - models:/app/models
+    env_file:
+      - .env
+    environment:
+      PYTHONUNBUFFERED: "1"
+    # restart: unless-stopped → reinicia automaticamente se o processo cair
+    restart: unless-stopped
+    # healthcheck via instrução HEALTHCHECK do Dockerfile
+    # O Compose exibe o status: starting → healthy | unhealthy
+    # depends_on garante que 'serve' só sobe após 'train' ter exitado com código 0
+    depends_on:
+      train:
+        condition: service_completed_successfully
+
+# =============================================================================
+# Volume nomeado — artefatos persistem entre execuções do Compose
+#
+# Diferença entre volume nomeado e bind mount:
+#   volume nomeado (aqui): gerenciado pelo Docker, mais portável
+#   bind mount (-v ./models:/app/models): diretório local visível no host
+#
+# Para inspecionar: docker volume inspect modulo9_models
+# =============================================================================
+volumes:
+  models:
+    name: modulo9_models

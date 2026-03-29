@@ -1,0 +1,59 @@
+# =============================================================================
+# Dockerfile.serve — Container de SERVING (produção)
+#
+# Novidade deste módulo: HEALTHCHECK instrui o Docker a verificar
+# periodicamente se a API está respondendo. Containers unhealthy são
+# sinalizados — e orquestradores como Kubernetes podem reiniciá-los.
+# =============================================================================
+FROM python:3.11-slim AS builder
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /build
+
+COPY requirements-serve.txt .
+RUN pip install --no-cache-dir --prefix=/install -r requirements-serve.txt
+
+
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY --from=builder /install /usr/local
+
+COPY src/ src/
+
+ENV PYTHONPATH=/app/src \
+    MODEL_DIR=models \
+    MODEL_VERSION="" \
+    LOG_LEVEL=INFO \
+    PYTHONUNBUFFERED=1 \
+    PORT=8000
+
+EXPOSE 8000
+
+
+# =============================================================================
+# HEALTHCHECK
+#
+# O Docker verifica periodicamente se a API está respondendo.
+# Status possíveis: starting → healthy | unhealthy
+#
+# --interval=30s   → verifica a cada 30 segundos
+# --timeout=10s    → falha se não responder em 10 segundos
+# --retries=3      → marca unhealthy após 3 falhas consecutivas
+# --start-period=15s → aguarda 15s antes da primeira verificação
+#                     (tempo para o modelo carregar)
+#
+# Em produção, load balancers e orquestradores usam este status para
+# rotear tráfego e reiniciar containers com problemas.
+# =============================================================================
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=15s \
+  CMD python -c \
+    "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" \
+  || exit 1
+
+
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
