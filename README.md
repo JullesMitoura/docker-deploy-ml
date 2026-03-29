@@ -92,21 +92,62 @@ Módulo 10       Pipeline end-to-end completo
 ## Evolução do projeto módulo a módulo
 
 ```
-modulo1/                    modulo5/                    modulo9/
-├── src/                    ├── src/                    ├── src/
-│   ├── train.py            │   ├── train.py ←─ versioning   │   ├── train.py
-│   └── inference.py        │   ├── inference.py        │   ├── app.py  ← FastAPI
-├── data/                   │   └── utils/              │   └── utils/
-└── requirements.txt        │       ├── logger.py       ├── Dockerfile.train
-                            │       └── versioning.py   ├── Dockerfile.serve
-modulo2/                    ├── Dockerfile.train        ├── docker-compose.yml
-├── Dockerfile ← 1 stage    ├── Dockerfile.inference    ├── .env.example
-└── ...                     ├── requirements-*.txt      └── ...
-                            └── models/
-modulo4/                        ├── model_{tag}.pkl     modulo10/
-├── Dockerfile.train ← multi   ├── model_latest.pkl    ├── Makefile
-├── Dockerfile.inference        └── registry.json       ├── docker-compose.yml
-└── .dockerignore aprimorado                            └── ...
+modulo1/
+├── src/
+│   ├── train.py
+│   └── inference.py
+├── data/
+└── requirements.txt
+
+modulo2/
+├── Dockerfile
+└── ...
+
+modulo3/
+├── Dockerfile.train
+├── Dockerfile.inference
+├── requirements-train.txt
+└── requirements-inference.txt
+
+modulo4/
+├── Dockerfile.train
+├── Dockerfile.inference
+└── .dockerignore
+
+modulo5/
+├── src/
+│   ├── train.py
+│   ├── inference.py
+│   └── utils/
+│       ├── logger.py
+│       └── versioning.py
+└── models/
+    ├── model_20240101_143052.pkl
+    ├── model_latest.pkl
+    └── registry.json
+
+modulo6/
+└── .github/workflows/modulo6-ci.yml
+
+modulo7/
+└── .github/workflows/modulo7-cd.yml
+
+modulo8/
+├── src/
+│   └── app.py
+├── Dockerfile.serve
+└── requirements-serve.txt
+
+modulo9/
+├── docker-compose.yml
+├── docker-compose.override.yml
+├── Dockerfile.serve
+└── .env.example
+
+modulo10/
+├── Makefile
+├── docker-compose.yml
+└── .github/workflows/modulo10-pipeline.yml
 ```
 
 ---
