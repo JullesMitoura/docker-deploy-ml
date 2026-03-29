@@ -31,10 +31,10 @@
 
 ## O problema do módulo anterior
 
-Nos módulos anteriores, a inferência é feita via CLI — um script Python que lê o modelo, imprime o resultado e encerra. Isso funciona para uso manual, mas não para produção:
+Nos módulos anteriores, a inferência é feita via CLI  um script Python que lê o modelo, imprime o resultado e encerra. Isso funciona para uso manual, mas não para produção:
 
 ```bash
-# CLI (módulos anteriores) — uma predição por execução, sem estado, sem concorrência
+# CLI (módulos anteriores)  uma predição por execução, sem estado, sem concorrência
 docker run heat-exchanger-inference python src/inference.py --date 2022-04-15
 ```
 
@@ -80,11 +80,11 @@ curl / frontend  ──POST──►   uvicorn (servidor ASGI)
 | Método | Rota | Descrição |
 |--------|------|-----------|
 | `GET` | `/` | Informações da API e versão do modelo carregado |
-| `GET` | `/health` | Health check — usado por load balancers |
+| `GET` | `/health` | Health check  usado por load balancers |
 | `POST` | `/predict/date` | Prediz eficiência para uma data |
 | `POST` | `/predict/efficiency` | Estima a data para uma eficiência alvo |
 | `GET` | `/versions` | Lista versões de modelo disponíveis |
-| `GET` | `/docs` | Documentação interativa (Swagger UI — automática) |
+| `GET` | `/docs` | Documentação interativa (Swagger UI  automática) |
 
 ---
 
@@ -104,7 +104,7 @@ async def lifespan(app: FastAPI):
     # executa APÓS o shutdown
 ```
 
-Após o startup, todas as requisições usam o modelo já em memória — sem re-carregar o arquivo a cada chamada.
+Após o startup, todas as requisições usam o modelo já em memória  sem re-carregar o arquivo a cada chamada.
 
 ### `Dockerfile.serve` (novo)
 
@@ -122,7 +122,7 @@ uvicorn[standard]==0.32.1  → servidor ASGI
 scikit-learn, pandas, numpy  → carregamento e uso do modelo
 ```
 
-`sqlalchemy` não está aqui — a API nunca acessa o banco de dados.
+`sqlalchemy` não está aqui  a API nunca acessa o banco de dados.
 
 ---
 
@@ -137,7 +137,7 @@ modulo8/
 ├── requirements-serve.txt  # NOVO: fastapi + uvicorn
 ├── src/
 │   ├── train.py            # pipeline de treino (módulo 05)
-│   ├── inference.py        # CLI de inferência (módulo 05) — mantido
+│   ├── inference.py        # CLI de inferência (módulo 05)  mantido
 │   ├── app.py              # NOVO: FastAPI application
 │   └── utils/
 │       ├── logger.py
@@ -196,7 +196,7 @@ docker logs heat-serve
 ```
 ```
 INFO     | Carregando modelo: models/model_latest.pkl
-INFO     | Modelo carregado — versão: 20240101_143052 | período: 2022-01-01 → 2022-06-30
+INFO     | Modelo carregado  versão: 20240101_143052 | período: 2022-01-01 → 2022-06-30
 INFO:     Application startup complete.
 INFO:     Uvicorn running on http://0.0.0.0:8000
 ```
@@ -285,7 +285,7 @@ docker stop heat-serve && docker rm heat-serve
 |---|---|---|
 | Execução | Uma predição → encerra | Contínua (server) |
 | Modelo carregado | A cada chamada | Uma vez no startup |
-| Acesso | Terminal local | HTTP — qualquer cliente |
+| Acesso | Terminal local | HTTP  qualquer cliente |
 | Concorrência | 1 por vez | Múltiplas requisições |
 | Documentação | README manual | /docs automático |
 | Healthcheck | Não | GET /health |

@@ -1,5 +1,5 @@
 # =============================================================================
-# Dockerfile.serve — Container de SERVING (FastAPI)
+# Dockerfile.serve  Container de SERVING (FastAPI)
 #
 # Responsabilidade única: servir predições via HTTP.
 # Carrega o modelo no startup e mantém-o em memória para respostas em tempo real.
@@ -19,7 +19,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /build
 
 # requirements-serve.txt: fastapi + uvicorn + scikit-learn + pandas + numpy
-# (sem sqlalchemy — a API não acessa o banco de dados)
+# (sem sqlalchemy  a API não acessa o banco de dados)
 COPY requirements-serve.txt .
 RUN pip install --no-cache-dir --prefix=/install -r requirements-serve.txt
 
@@ -30,7 +30,7 @@ WORKDIR /app
 
 COPY --from=builder /install /usr/local
 
-# Copia apenas o código-fonte — o modelo chega via volume em runtime
+# Copia apenas o código-fonte  o modelo chega via volume em runtime
 COPY src/ src/
 
 
@@ -53,7 +53,7 @@ ENV PYTHONPATH=/app/src \
 # =============================================================================
 # Porta exposta
 #
-# EXPOSE documenta a porta — não a publica automaticamente.
+# EXPOSE documenta a porta  não a publica automaticamente.
 # Para publicar, use -p na chamada docker run:
 #   docker run -p 8000:8000 heat-exchanger-serve
 # =============================================================================

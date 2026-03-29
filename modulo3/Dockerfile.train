@@ -1,5 +1,5 @@
 # =============================================================================
-# Dockerfile.train — Container de TREINO
+# Dockerfile.train  Container de TREINO
 #
 # Responsabilidade única: carregar os dados, treinar o modelo e salvar o
 # artefato (model.pkl) em um volume compartilhado.
@@ -29,7 +29,7 @@ WORKDIR /app
 #   - numpy         → operações vetoriais
 #   - sqlalchemy    → acesso ao banco SQLite
 #
-# A inferência NÃO precisa de sqlalchemy — ela lê apenas o model.pkl.
+# A inferência NÃO precisa de sqlalchemy  ela lê apenas o model.pkl.
 # Separar os requirements garante que cada imagem carregue só o necessário.
 # =============================================================================
 COPY requirements-train.txt .
@@ -43,7 +43,7 @@ RUN pip install --no-cache-dir -r requirements-train.txt
 #   - src/          → código Python (train.py + utils/)
 #   - data/         → banco SQLite com os dados históricos
 #
-# Não copiamos models/ — o modelo será escrito em runtime via volume,
+# Não copiamos models/  o modelo será escrito em runtime via volume,
 # ficando disponível para o container de inferência.
 # =============================================================================
 COPY src/  src/
@@ -68,7 +68,7 @@ ENV DB_PATH=data/heat_exchanger.db \
 # Entrypoint de treino
 #
 # Este container sempre executa o treino. O artefato gerado (model.pkl) é
-# escrito em MODEL_DIR — que em produção será um volume compartilhado:
+# escrito em MODEL_DIR  que em produção será um volume compartilhado:
 #
 #   docker run -v $(pwd)/models:/app/models heat-exchanger-train
 #

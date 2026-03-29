@@ -35,7 +35,7 @@ Nos módulos anteriores, o treino sempre sobrescreve `model.pkl`. Isso funciona 
 
 ```
 Treino 1 → model.pkl  (boas métricas)
-Treino 2 → model.pkl  (dados ruins, métricas piores — mas você não sabe)
+Treino 2 → model.pkl  (dados ruins, métricas piores  mas você não sabe)
 ```
 
 **Você perdeu a versão anterior sem perceber.** Não há como voltar, comparar métricas entre treinos, ou saber exatamente qual modelo está em produção.
@@ -92,7 +92,7 @@ models/
 
 | Timestamp (YYYYMMDD_HHMMSS) | Número sequencial (v1, v2, v3) |
 |-----------------------------|-------------------------------|
-| Autoexplicativo — você sabe quando foi treinado | Requer estado externo para controlar o próximo número |
+| Autoexplicativo  você sabe quando foi treinado | Requer estado externo para controlar o próximo número |
 | Funciona em paralelo (múltiplos workers) | Colisão possível em treinos simultâneos |
 | Não requer banco de dados | Requer banco de dados ou lock |
 
@@ -110,21 +110,21 @@ models/
 | `resolve_model_path()` | Resolve o caminho para uma versão específica ou para latest |
 | `list_versions()` | Lista versões do registry, da mais recente para a mais antiga |
 
-### `src/train.py` — o que mudou
+### `src/train.py`  o que mudou
 
 Cada execução agora:
-1. Gera `model_{tag}.pkl` — artefato imutável com timestamp
-2. Copia para `model_latest.pkl` — ponteiro sempre atualizado
-3. Atualiza `registry.json` — histórico rastreável
+1. Gera `model_{tag}.pkl`  artefato imutável com timestamp
+2. Copia para `model_latest.pkl`  ponteiro sempre atualizado
+3. Atualiza `registry.json`  histórico rastreável
 
-### `src/inference.py` — o que mudou
+### `src/inference.py`  o que mudou
 
 Dois novos argumentos:
-- `--model-version TAG` — carrega versão específica
-- `--list-versions` — exibe todas as versões do registry
+- `--model-version TAG`  carrega versão específica
+- `--list-versions`  exibe todas as versões do registry
 
 Nova variável de ambiente:
-- `MODEL_VERSION` — alternativa ao argumento CLI para selecionar versão
+- `MODEL_VERSION`  alternativa ao argumento CLI para selecionar versão
 
 ---
 
@@ -132,8 +132,8 @@ Nova variável de ambiente:
 
 ```
 modulo5/
-├── Dockerfile.train        # multi-stage — gera artefatos versionados
-├── Dockerfile.inference    # multi-stage — seleção de versão por argumento ou env var
+├── Dockerfile.train        # multi-stage  gera artefatos versionados
+├── Dockerfile.inference    # multi-stage  seleção de versão por argumento ou env var
 ├── .dockerignore
 ├── requirements-train.txt
 ├── requirements-inference.txt
@@ -145,7 +145,7 @@ modulo5/
 │       └── versioning.py   # NOVO: toda a lógica de versionamento
 ├── data/
 │   └── heat_exchanger.db
-└── models/                 # volume — artefatos versionados persistem aqui
+└── models/                 # volume  artefatos versionados persistem aqui
 ```
 
 ---
@@ -175,12 +175,12 @@ Saída esperada:
 ```
 2024-01-01 14:30:52 | INFO     | Conectando ao banco: data/heat_exchanger.db
 2024-01-01 14:30:52 | INFO     | Dados carregados: 175 registros | ...
-2024-01-01 14:30:52 | INFO     | Treino concluído — coef=-0.017900  intercept=96.4500
+2024-01-01 14:30:52 | INFO     | Treino concluído  coef=-0.017900  intercept=96.4500
 2024-01-01 14:30:52 | INFO     | MAE=0.0397%  RMSE=0.0469%  R²=0.9975  ...
 2024-01-01 14:30:52 | INFO     | Artefato versionado salvo: models/model_20240101_143052.pkl
 2024-01-01 14:30:52 | INFO     | Promovido para latest: models/model_latest.pkl
-2024-01-01 14:30:52 | INFO     | Registry atualizado — versão: 20240101_143052
-2024-01-01 14:30:52 | INFO     | Treino concluído — versão: 20240101_143052
+2024-01-01 14:30:52 | INFO     | Registry atualizado  versão: 20240101_143052
+2024-01-01 14:30:52 | INFO     | Treino concluído  versão: 20240101_143052
 ```
 
 Verifique os artefatos:

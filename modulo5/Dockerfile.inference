@@ -1,5 +1,5 @@
 # =============================================================================
-# Dockerfile.inference — Container de INFERÊNCIA com seleção de versão
+# Dockerfile.inference  Container de INFERÊNCIA com seleção de versão
 #
 # Novidade deste módulo: a inferência pode apontar para qualquer versão
 # registrada no registry.json, ou usar model_latest.pkl por padrão.

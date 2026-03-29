@@ -1,5 +1,5 @@
 # =============================================================================
-# Dockerfile.inference — Multi-stage build para INFERÊNCIA
+# Dockerfile.inference  Multi-stage build para INFERÊNCIA
 #
 # A imagem de inferência é ainda mais enxuta que a de treino:
 #   - Sem sqlalchemy (não acessa banco de dados)
@@ -13,7 +13,7 @@
 
 
 # =============================================================================
-# Stage 1 — builder
+# Stage 1  builder
 #
 # Instala as dependências de inferência em um diretório isolado.
 # gcc disponível aqui apenas para pacotes que precisam compilar extensões C.
@@ -31,7 +31,7 @@ RUN pip install --no-cache-dir --prefix=/install -r requirements-inference.txt
 
 
 # =============================================================================
-# Stage 2 — runtime
+# Stage 2  runtime
 #
 # Imagem final mínima: apenas Python + scikit-learn + pandas + numpy.
 # Sem gcc, sem sqlalchemy, sem dados.
@@ -42,7 +42,7 @@ WORKDIR /app
 
 COPY --from=builder /install /usr/local
 
-# Apenas o código-fonte — sem data/
+# Apenas o código-fonte  sem data/
 COPY src/ src/
 
 
@@ -50,7 +50,7 @@ COPY src/ src/
 # Variáveis de ambiente
 #
 # MODEL_DIR aponta para onde o volume será montado em runtime.
-# DB_PATH ausente — inferência não acessa banco de dados.
+# DB_PATH ausente  inferência não acessa banco de dados.
 # =============================================================================
 ENV MODEL_DIR=models \
     LOG_LEVEL=INFO \

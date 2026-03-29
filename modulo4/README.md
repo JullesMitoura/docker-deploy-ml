@@ -46,7 +46,7 @@ Imagens grandes têm custo real em produção: mais tempo de pull, mais banda, m
 
 ## Multi-stage build
 
-O multi-stage build resolve isso ao separar a construção em etapas independentes. A imagem final parte do zero — apenas os artefatos explicitamente copiados do stage anterior entram nela.
+O multi-stage build resolve isso ao separar a construção em etapas independentes. A imagem final parte do zero  apenas os artefatos explicitamente copiados do stage anterior entram nela.
 
 ```
 Stage 1: builder                    Stage 2: runtime
@@ -60,23 +60,23 @@ python:3.11-slim                    python:3.11-slim  (nova, zerada)
                                       ← sem ferramentas de build
 ```
 
-O `gcc` e o cache de download existem apenas no builder — eles **nunca chegam à imagem final**.
+O `gcc` e o cache de download existem apenas no builder  eles **nunca chegam à imagem final**.
 
 ---
 
 ## Como o multi-stage funciona
 
 ```dockerfile
-# Stage 1 — instala tudo, incluindo ferramentas de compilação
+# Stage 1  instala tudo, incluindo ferramentas de compilação
 FROM python:3.11-slim AS builder
 
 RUN apt-get install -y gcc
 RUN pip install --prefix=/install -r requirements.txt
 
-# Stage 2 — imagem final, parte do zero
+# Stage 2  imagem final, parte do zero
 FROM python:3.11-slim
 
-# Copia apenas os pacotes instalados — gcc fica de fora
+# Copia apenas os pacotes instalados  gcc fica de fora
 COPY --from=builder /install /usr/local
 COPY src/ src/
 ```
@@ -87,7 +87,7 @@ COPY src/ src/
 
 ## .dockerignore aprimorado
 
-O `.dockerignore` deste módulo é mais completo que o dos anteriores. Cada categoria excluída reduz o **contexto de build** — o conjunto de arquivos enviados ao daemon Docker antes do primeiro `FROM`.
+O `.dockerignore` deste módulo é mais completo que o dos anteriores. Cada categoria excluída reduz o **contexto de build**  o conjunto de arquivos enviados ao daemon Docker antes do primeiro `FROM`.
 
 ```
 Módulo 02 .dockerignore: 7 linhas  → contexto ~15 MB (com dados)
@@ -95,11 +95,11 @@ Módulo 04 .dockerignore: 50 linhas → contexto ~13 MB (mesmo projeto, menos li
 ```
 
 Categorias adicionadas:
-- `*.pkl`, `*.joblib`, `*.h5`, `*.pt`, `*.onnx` — formatos de modelo
-- `notebooks/`, `*.ipynb` — não fazem parte do container de produção
-- `.vscode/`, `.idea/` — configurações de IDE
-- `.env`, `.env.*` — variáveis de ambiente locais (nunca devem entrar na imagem)
-- `tests/`, `.pytest_cache/` — artefatos de teste
+- `*.pkl`, `*.joblib`, `*.h5`, `*.pt`, `*.onnx`  formatos de modelo
+- `notebooks/`, `*.ipynb`  não fazem parte do container de produção
+- `.vscode/`, `.idea/`  configurações de IDE
+- `.env`, `.env.*`  variáveis de ambiente locais (nunca devem entrar na imagem)
+- `tests/`, `.pytest_cache/`  artefatos de teste
 
 ---
 
@@ -109,9 +109,9 @@ O Docker invalida o cache de uma camada se qualquer camada anterior mudou. A est
 
 ```dockerfile
 COPY requirements-train.txt .           # camada 3
-RUN pip install -r requirements-train.txt  # camada 4 — cache válido se req não mudou
+RUN pip install -r requirements-train.txt  # camada 4  cache válido se req não mudou
 
-COPY src/ src/                          # camada 5 — mudanças aqui NÃO invalidam pip install
+COPY src/ src/                          # camada 5  mudanças aqui NÃO invalidam pip install
 COPY data/ data/                        # camada 6
 ```
 
@@ -147,10 +147,10 @@ modulo4/
 │       └── logger.py       # logger configurável via LOG_LEVEL
 ├── data/
 │   └── heat_exchanger.db   # banco SQLite com os dados
-└── models/                 # artefatos gerados — compartilhados via volume
+└── models/                 # artefatos gerados  compartilhados via volume
 ```
 
-> O código Python não muda entre módulos — a evolução está na infraestrutura Docker.
+> O código Python não muda entre módulos  a evolução está na infraestrutura Docker.
 
 ---
 
@@ -220,7 +220,7 @@ Edite uma linha em `src/train.py` e rebuilde:
 docker build -f Dockerfile.train -t heat-exchanger-train-v4 .
 ```
 
-O `pip install` não será re-executado — o cache da camada é reutilizado.
+O `pip install` não será re-executado  o cache da camada é reutilizado.
 
 ---
 

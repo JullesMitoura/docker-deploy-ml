@@ -1,6 +1,6 @@
 # =============================================================================
-# Dockerfile.train — Container de TREINO
-# Idêntico ao módulo 05 — o CI constrói esta imagem automaticamente.
+# Dockerfile.train  Container de TREINO
+# Idêntico ao módulo 05  o CI constrói esta imagem automaticamente.
 # =============================================================================
 FROM python:3.11-slim AS builder
 

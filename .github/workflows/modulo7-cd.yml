@@ -1,5 +1,5 @@
 # =============================================================================
-# Workflow: Modulo 7 — CI/CD + Docker Hub
+# Workflow: Modulo 7  CI/CD + Docker Hub
 #
 # Objetivo: construir, testar e publicar as imagens Docker no Docker Hub.
 #
@@ -14,13 +14,13 @@
 #   - Push em main   → build + test + push com tags :latest e :main-{sha}
 #   - Git tag v*.*.*  → build + test + push com tags semver (:v1.2.3, :1.2, :1)
 #
-# Pré-requisito — Secrets configurados no repositório GitHub:
+# Pré-requisito  Secrets configurados no repositório GitHub:
 #   Settings → Secrets and variables → Actions → New repository secret
 #   DOCKERHUB_USERNAME → seu usuário do Docker Hub
 #   DOCKERHUB_TOKEN    → Access Token gerado em hub.docker.com/settings/security
 # =============================================================================
 
-name: Modulo 7 — CI/CD + Docker Hub
+name: Modulo 7  CI/CD + Docker Hub
 
 on:
   push:
@@ -38,7 +38,7 @@ on:
   workflow_dispatch:
 
 env:
-  # Nome das imagens no Docker Hub — substitua pelo seu usuário nas variáveis secretas
+  # Nome das imagens no Docker Hub  substitua pelo seu usuário nas variáveis secretas
   IMAGE_TRAIN:     ${{ secrets.DOCKERHUB_USERNAME }}/heat-exchanger-train
   IMAGE_INFERENCE: ${{ secrets.DOCKERHUB_USERNAME }}/heat-exchanger-inference
 
@@ -51,7 +51,7 @@ jobs:
   # - Exporta imagem como tarball para o job de teste (sempre)
   # ===========================================================================
   build-train:
-    name: Build — imagem de treino
+    name: Build  imagem de treino
     runs-on: ubuntu-latest
 
     steps:
@@ -64,7 +64,7 @@ jobs:
       # -----------------------------------------------------------------------
       # Autenticação no Docker Hub
       #
-      # Só ocorre fora de PRs — pull requests de forks não têm acesso a secrets.
+      # Só ocorre fora de PRs  pull requests de forks não têm acesso a secrets.
       # Em PRs, as imagens são buildadas mas não publicadas.
       # -----------------------------------------------------------------------
       - name: Login no Docker Hub
@@ -128,7 +128,7 @@ jobs:
   # Job 2: Build da imagem de INFERÊNCIA (paralelo ao build-train)
   # ===========================================================================
   build-inference:
-    name: Build — imagem de inferência
+    name: Build  imagem de inferência
     runs-on: ubuntu-latest
 
     steps:
@@ -180,13 +180,13 @@ jobs:
   # ===========================================================================
   # Job 3: Testes de integração
   #
-  # Sempre executa — valida que treino e inferência funcionam antes de qualquer
+  # Sempre executa  valida que treino e inferência funcionam antes de qualquer
   # publicação. O push aconteceu nos jobs de build (não aqui), mas o workflow
-  # falha como um todo se este job falhar — garantindo que imagens quebradas
+  # falha como um todo se este job falhar  garantindo que imagens quebradas
   # não ficam no Docker Hub sem sinalização de erro.
   # ===========================================================================
   test:
-    name: Teste — integração treino + inferência
+    name: Teste  integração treino + inferência
     runs-on: ubuntu-latest
     needs: [build-train, build-inference]
 
@@ -218,14 +218,14 @@ jobs:
           test -f models/model_latest.pkl && echo "OK: model_latest.pkl"
           test -f models/registry.json    && echo "OK: registry.json"
 
-      - name: Inferência — prever eficiência por data
+      - name: Inferência  prever eficiência por data
         run: |
           docker run \
             -v $(pwd)/models:/app/models \
             heat-exchanger-inference:${{ github.sha }} \
             python src/inference.py --date 2022-04-15
 
-      - name: Inferência — estimar data para eficiência alvo
+      - name: Inferência  estimar data para eficiência alvo
         run: |
           docker run \
             -v $(pwd)/models:/app/models \

@@ -29,7 +29,7 @@
 # Docker: Machine Learning para Produção
 > Foco: Engenharia de ML, Reprodutibilidade, Produção, Workflow real
 
-Curso prático que conduz o aluno desde a organização de um projeto de ML até o deploy completo de um modelo em produção usando Docker — com CI/CD, versionamento de artefatos e serving via API REST.
+Curso prático que conduz o aluno desde a organização de um projeto de ML até o deploy completo de um modelo em produção usando Docker  com CI/CD, versionamento de artefatos e serving via API REST.
 
 ---
 

@@ -49,11 +49,11 @@ def load_data(db_path: str) -> pd.DataFrame:
 
 
 def train(X: np.ndarray, y: np.ndarray) -> LinearRegression:
-    logger.info("Iniciando treino — modelo: LinearRegression")
+    logger.info("Iniciando treino  modelo: LinearRegression")
     model = LinearRegression()
     model.fit(X, y)
     logger.info(
-        "Treino concluído — coef=%.6f  intercept=%.4f",
+        "Treino concluído  coef=%.6f  intercept=%.4f",
         model.coef_[0],
         model.intercept_,
     )
@@ -77,9 +77,9 @@ def evaluate(model: LinearRegression, X: np.ndarray, y: np.ndarray) -> dict:
 def save_artifacts(model: LinearRegression, df: pd.DataFrame, metrics: dict) -> str:
     """
     Salva o modelo com versionamento:
-      1. model_{tag}.pkl  — artefato versionado imutável
-      2. model_latest.pkl — sempre aponta para a versão mais recente
-      3. registry.json    — índice com metadados de todas as versões
+      1. model_{tag}.pkl   artefato versionado imutável
+      2. model_latest.pkl  sempre aponta para a versão mais recente
+      3. registry.json     índice com metadados de todas as versões
     """
     os.makedirs(MODEL_DIR, exist_ok=True)
 
@@ -103,7 +103,7 @@ def save_artifacts(model: LinearRegression, df: pd.DataFrame, metrics: dict) -> 
 
     # 3. Atualiza registry
     save_registry(MODEL_DIR, version_tag, metrics)
-    logger.info("Registry atualizado — versão: %s", version_tag)
+    logger.info("Registry atualizado  versão: %s", version_tag)
 
     return version_tag
 
@@ -133,4 +133,4 @@ if __name__ == "__main__":
     )
 
     version_tag = save_artifacts(model, df, metrics)
-    logger.info("Treino concluído — versão: %s", version_tag)
+    logger.info("Treino concluído  versão: %s", version_tag)

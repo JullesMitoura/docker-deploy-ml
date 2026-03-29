@@ -1,4 +1,4 @@
-# docker-compose.yml — Pipeline completo (módulo 10)
+# docker-compose.yml  Pipeline completo (módulo 10)
 services:
   train:
     build:

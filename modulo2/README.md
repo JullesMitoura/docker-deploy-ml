@@ -48,7 +48,7 @@ Todos eles têm a mesma raiz: **o ambiente da sua máquina não é o ambiente de
 | Conceito | O que é |
 |----------|---------|
 | **Imagem** | Snapshot imutável do ambiente (sistema + dependências + código) |
-| **Container** | Instância em execução de uma imagem — efêmero por padrão |
+| **Container** | Instância em execução de uma imagem  efêmero por padrão |
 | **Dockerfile** | Receita de instruções para construir uma imagem |
 | **Build** | Processo de transformar o Dockerfile em imagem |
 | **Layer** | Cada instrução do Dockerfile gera uma camada; camadas são cacheadas |
@@ -71,7 +71,7 @@ Define o diretório de trabalho dentro do container. Todos os caminhos relativos
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 ```
-Copiamos o `requirements.txt` **antes** do código-fonte. Isso não é acidente — é estratégia de cache:
+Copiamos o `requirements.txt` **antes** do código-fonte. Isso não é acidente  é estratégia de cache:
 
 ```
 Se requirements.txt não mudou → Docker reutiliza a camada do pip install
@@ -153,8 +153,8 @@ Saída esperada:
 ```
 2022-01-01 00:00:00 | INFO     | Conectando ao banco: data/heat_exchanger.db
 2022-01-01 00:00:00 | INFO     | Dados carregados: 175 registros | período: 2022-01-01 → 2022-06-30
-2022-01-01 00:00:00 | INFO     | Iniciando treino — modelo: LinearRegression
-2022-01-01 00:00:00 | INFO     | Treino concluído — coef=-0.017900  intercept=96.4500
+2022-01-01 00:00:00 | INFO     | Iniciando treino  modelo: LinearRegression
+2022-01-01 00:00:00 | INFO     | Treino concluído  coef=-0.017900  intercept=96.4500
 2022-01-01 00:00:00 | INFO     | MAE=0.0397%  RMSE=0.0469%  R²=0.9975  R²_CV=0.9974±0.0003  Tendência=-0.0179%/dia
 2022-01-01 00:00:00 | INFO     | Modelo salvo: models/model.pkl
 ```
@@ -178,10 +178,10 @@ Com `LOG_LEVEL=DEBUG` aparecem mensagens adicionais como faixa de eficiência e 
 Para rodar a inferência, sobrescreva o `CMD` padrão:
 
 ```bash
-# Modo 1 — prever eficiência para uma data
+# Modo 1  prever eficiência para uma data
 docker run heat-exchanger-train python src/inference.py --date 2022-04-15
 
-# Modo 2 — encontrar datas para uma eficiência alvo
+# Modo 2  encontrar datas para uma eficiência alvo
 docker run heat-exchanger-train python src/inference.py --efficiency 94.5
 ```
 
@@ -195,7 +195,7 @@ Você pode ter notado um comportamento inesperado: ao rodar a inferência em um 
 FileNotFoundError: Modelo não encontrado em: models/model.pkl
 ```
 
-**Por quê?** Containers são efêmeros. O modelo gerado pelo container de treino vive apenas dentro daquele container — quando ele para, os arquivos desaparecem.
+**Por quê?** Containers são efêmeros. O modelo gerado pelo container de treino vive apenas dentro daquele container  quando ele para, os arquivos desaparecem.
 
 Para rodar treino + inferência sem volumes, execute tudo em um único container:
 
@@ -204,7 +204,7 @@ docker run heat-exchanger-train \
   sh -c "python src/train.py && python src/inference.py --date 2022-04-15"
 ```
 
-Isso funciona, mas é um workaround. A solução correta — separar o artefato do container — é o tema da **Aula 05** (volumes).
+Isso funciona, mas é um workaround. A solução correta  separar o artefato do container  é o tema da **Aula 05** (volumes).
 
 ---
 

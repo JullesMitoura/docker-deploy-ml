@@ -32,10 +32,10 @@
 
 ## O problema do módulo anterior
 
-No módulo 08, treino e serving são orquestrados manualmente — dois `docker run` separados que você precisa lembrar de executar na ordem certa. Em produção, isso é frágil:
+No módulo 08, treino e serving são orquestrados manualmente  dois `docker run` separados que você precisa lembrar de executar na ordem certa. Em produção, isso é frágil:
 
 ```bash
-# Módulo 08 — orquestração manual, propensa a erros
+# Módulo 08  orquestração manual, propensa a erros
 docker run -v $(pwd)/models:/app/models heat-exchanger-train   # esquecer isso...
 docker run -v $(pwd)/models:/app/models -p 8000:8000 heat-exchanger-serve  # ...quebra isso
 ```
@@ -83,15 +83,15 @@ docker compose -f docker-compose.yml up  → só o yml base (prod)
 ### `docker-compose.yml`
 - Serviço `train`: roda uma vez e encerra (`restart: "no"`)
 - Serviço `serve`: execução contínua (`restart: unless-stopped`)
-- `depends_on: condition: service_completed_successfully` — barrier entre treino e serving
-- Volume nomeado `modulo9_models` — persiste entre `docker compose down/up`
+- `depends_on: condition: service_completed_successfully`  barrier entre treino e serving
+- Volume nomeado `modulo9_models`  persiste entre `docker compose down/up`
 
 ### `docker-compose.override.yml`
 - Sobrescreve o CMD para `--reload` (hot reload em dev)
 - Monta `./src` como volume para edição sem rebuild
 - Define `LOG_LEVEL=DEBUG`
 
-### `Dockerfile.serve` — HEALTHCHECK
+### `Dockerfile.serve`  HEALTHCHECK
 ```dockerfile
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=15s \
   CMD python -c \
@@ -102,7 +102,7 @@ HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=15s \
 O Docker verifica a saúde do container periodicamente. `docker ps` mostrará `(healthy)` ou `(unhealthy)`. Orquestradores (Kubernetes, ECS) usam esse status para roteamento de tráfego.
 
 ### `.env.example` + `.env`
-Variáveis de ambiente em arquivo — não mais hardcoded no comando `docker run`.
+Variáveis de ambiente em arquivo  não mais hardcoded no comando `docker run`.
 
 ---
 
@@ -112,8 +112,8 @@ Variáveis de ambiente em arquivo — não mais hardcoded no comando `docker run
 modulo9/
 ├── docker-compose.yml          # serviços train + serve (modo produção)
 ├── docker-compose.override.yml # overrides dev (hot reload, DEBUG)
-├── .env.example                # template — commitar
-├── .env                        # valores reais — NÃO commitar (.gitignore)
+├── .env.example                # template  commitar
+├── .env                        # valores reais  NÃO commitar (.gitignore)
 ├── Dockerfile.train
 ├── Dockerfile.serve            # com HEALTHCHECK
 ├── .dockerignore
@@ -149,7 +149,7 @@ cp .env.example .env
 
 Edite `.env` conforme necessário (os padrões já funcionam para desenvolvimento local).
 
-### 3. Pipeline completo (modo dev — com override automático)
+### 3. Pipeline completo (modo dev  com override automático)
 
 ```bash
 docker compose up --build
@@ -164,9 +164,9 @@ O que acontece:
 
 Saída esperada:
 ```
-modulo9-train-1  | INFO     | Treino concluído — versão: 20240101_143052
+modulo9-train-1  | INFO     | Treino concluído  versão: 20240101_143052
 modulo9-train-1 exited with code 0
-modulo9-serve-1  | INFO     | Modelo carregado — versão: 20240101_143052
+modulo9-serve-1  | INFO     | Modelo carregado  versão: 20240101_143052
 modulo9-serve-1  | INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
 ```
 
@@ -211,7 +211,7 @@ Com o override ativo, edite qualquer arquivo em `src/`:
 echo "# comentario de teste" >> src/app.py
 ```
 
-O uvicorn detecta a mudança e reinicia automaticamente — sem rebuild.
+O uvicorn detecta a mudança e reinicia automaticamente  sem rebuild.
 
 ### 8. Encerre o pipeline
 

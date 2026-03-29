@@ -1,5 +1,5 @@
 """
-versioning.py — Utilitários de versionamento manual de modelos.
+versioning.py  Utilitários de versionamento manual de modelos.
 
 Estratégia adotada (sem ferramenta externa):
   - Cada artefato é salvo com tag baseada em timestamp: model_YYYYMMDD_HHMMSS.pkl

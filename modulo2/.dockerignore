@@ -1,4 +1,4 @@
-# Ambiente virtual local — nunca entra na imagem
+# Ambiente virtual local  nunca entra na imagem
 .venv/
 
 # Bytecode Python
@@ -6,7 +6,7 @@ __pycache__/
 *.pyc
 *.pyo
 
-# Artefatos gerados — o container os produz em runtime
+# Artefatos gerados  o container os produz em runtime
 models/
 
 # Git

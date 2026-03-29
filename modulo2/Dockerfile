@@ -8,7 +8,7 @@
 # =============================================================================
 # OBJETIVO 2: Escolha da imagem base
 #
-# Todo Dockerfile começa com FROM — define o ponto de partida da imagem.
+# Todo Dockerfile começa com FROM  define o ponto de partida da imagem.
 # "python:3.11-slim" é a imagem oficial do Python em cima de um Debian mínimo:
 #   - python:3.11        → ~1 GB  (ferramentas de compilação, headers, etc.)
 #   - python:3.11-slim   → ~50 MB (apenas o necessário para rodar Python)
@@ -19,7 +19,7 @@ FROM python:3.11-slim
 
 
 # =============================================================================
-# WORKDIR — Diretório de trabalho dentro do container
+# WORKDIR  Diretório de trabalho dentro do container
 #
 # Define a pasta raiz de todos os comandos seguintes (COPY, RUN, CMD).
 # Equivale a um "cd /app" permanente. Se a pasta não existir, o Docker a cria.
@@ -30,7 +30,7 @@ WORKDIR /app
 # =============================================================================
 # OBJETIVO 3: Instalação de dependências
 #
-# Copiamos o requirements.txt ANTES do código-fonte — isso é estratégia de cache:
+# Copiamos o requirements.txt ANTES do código-fonte  isso é estratégia de cache:
 #
 #   Se requirements.txt não mudou → Docker reutiliza a camada do pip install
 #   Se só o código mudou          → pip install NÃO é re-executado
@@ -65,7 +65,7 @@ COPY data/ data/
 # MODEL_DIR → pasta onde o model.pkl será salvo após o treino
 # LOG_LEVEL → nível de log (INFO por padrão, DEBUG para mais detalhes)
 # PYTHONUNBUFFERED → força o Python a escrever logs imediatamente no terminal,
-#                    sem buffer — essencial para acompanhar o treino em tempo real
+#                    sem buffer  essencial para acompanhar o treino em tempo real
 # =============================================================================
 ENV DB_PATH=data/heat_exchanger.db \
     MODEL_DIR=models \

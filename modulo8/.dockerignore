@@ -1,4 +1,4 @@
-# Ambiente virtual local — nunca entra na imagem
+# Ambiente virtual local  nunca entra na imagem
 .venv/
 venv/
 env/
@@ -10,7 +10,7 @@ __pycache__/
 *.pyd
 .Python
 
-# Artefatos de modelo — fornecidos via volume em produção
+# Artefatos de modelo  fornecidos via volume em produção
 models/
 *.pkl
 *.joblib
@@ -29,7 +29,7 @@ models/
 *.txt
 !requirements*.txt
 
-# Notebooks — não fazem parte do container de produção
+# Notebooks  não fazem parte do container de produção
 notebooks/
 *.ipynb
 .ipynb_checkpoints/

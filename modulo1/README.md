@@ -104,11 +104,11 @@ Ao longo do curso usaremos dados reais de um **trocador de calor** (`heat_exchan
 | `glycol_inlet_temperature` | REAL | Temperatura de entrada do glicol (°C) |
 | `out_glycol_temperature` | REAL | Temperatura de saída do glicol (°C) |
 | `out_water_temperature` | REAL | Temperatura de saída da água (°C) |
-| `heat_efficiency` | REAL | Eficiência térmica (%) — **alvo** |
+| `heat_efficiency` | REAL | Eficiência térmica (%)  **alvo** |
 
 ### Por que Regressão Linear?
 
-A eficiência cai de forma monotônica ao longo do tempo (~-0.018% por dia), seguindo uma tendência linear clara. Modelos baseados em árvores (como GradientBoosting) não extrapolam bem fora do range de treino — a regressão linear é a escolha correta para capturar e projetar essa degradação.
+A eficiência cai de forma monotônica ao longo do tempo (~-0.018% por dia), seguindo uma tendência linear clara. Modelos baseados em árvores (como GradientBoosting) não extrapolam bem fora do range de treino  a regressão linear é a escolha correta para capturar e projetar essa degradação.
 
 ---
 
@@ -179,13 +179,13 @@ Modelo salvo em: models/model.pkl
 ### 6. Execute a inferência
 
 ```bash
-# Modo 1 — prever eficiência para uma data
+# Modo 1  prever eficiência para uma data
 python src/inference.py --date 2025-06-15
 
-# Modo 2 — estimar a data para uma eficiência alvo (histórico)
+# Modo 2  estimar a data para uma eficiência alvo (histórico)
 python src/inference.py --efficiency 80.0
 
-# Modo 2 — eficiência abaixo do mínimo histórico (extrapolação futura)
+# Modo 2  eficiência abaixo do mínimo histórico (extrapolação futura)
 python src/inference.py --efficiency 60.0
 ```
 

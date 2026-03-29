@@ -1,9 +1,9 @@
 # =============================================================================
-# Dockerfile.serve — Container de SERVING (produção)
+# Dockerfile.serve  Container de SERVING (produção)
 #
 # Novidade deste módulo: HEALTHCHECK instrui o Docker a verificar
 # periodicamente se a API está respondendo. Containers unhealthy são
-# sinalizados — e orquestradores como Kubernetes podem reiniciá-los.
+# sinalizados  e orquestradores como Kubernetes podem reiniciá-los.
 # =============================================================================
 FROM python:3.11-slim AS builder
 

@@ -34,7 +34,7 @@
 No módulo 02, treino e inferência rodavam no mesmo container. Isso funcionou como workaround, mas viola um princípio fundamental de engenharia de software: **responsabilidade única**.
 
 ```bash
-# Módulo 02 — gambeta: tudo num container só
+# Módulo 02  gambeta: tudo num container só
 docker run heat-exchanger-train \
   sh -c "python src/train.py && python src/inference.py --date 2022-04-15"
 ```
@@ -96,7 +96,7 @@ modulo3/
 │       └── logger.py       # logger configurável via LOG_LEVEL
 ├── data/
 │   └── heat_exchanger.db   # banco SQLite com os dados
-└── models/                 # artefatos gerados — compartilhados via volume
+└── models/                 # artefatos gerados  compartilhados via volume
 ```
 
 ---
@@ -138,8 +138,8 @@ Saída esperada:
 ```
 2022-01-01 00:00:00 | INFO     | Conectando ao banco: data/heat_exchanger.db
 2022-01-01 00:00:00 | INFO     | Dados carregados: 175 registros | período: 2022-01-01 → 2022-06-30
-2022-01-01 00:00:00 | INFO     | Iniciando treino — modelo: LinearRegression
-2022-01-01 00:00:00 | INFO     | Treino concluído — coef=-0.017900  intercept=96.4500
+2022-01-01 00:00:00 | INFO     | Iniciando treino  modelo: LinearRegression
+2022-01-01 00:00:00 | INFO     | Treino concluído  coef=-0.017900  intercept=96.4500
 2022-01-01 00:00:00 | INFO     | MAE=0.0397%  RMSE=0.0469%  R²=0.9975  R²_CV=0.9974±0.0003  Tendência=-0.0179%/dia
 2022-01-01 00:00:00 | INFO     | Modelo salvo: models/model.pkl
 ```
@@ -152,14 +152,14 @@ ls -lh models/
 
 ### 4. Execute a inferência com volume
 
-O mesmo volume montado no treino torna o `model.pkl` disponível para o container de inferência — sem cópia, sem rebuild.
+O mesmo volume montado no treino torna o `model.pkl` disponível para o container de inferência  sem cópia, sem rebuild.
 
 ```bash
-# Modo 1 — prever eficiência para uma data
+# Modo 1  prever eficiência para uma data
 docker run -v $(pwd)/models:/app/models heat-exchanger-inference \
   python src/inference.py --date 2022-04-15
 
-# Modo 2 — estimar data para uma eficiência alvo
+# Modo 2  estimar data para uma eficiência alvo
 docker run -v $(pwd)/models:/app/models heat-exchanger-inference \
   python src/inference.py --efficiency 94.5
 ```
@@ -176,7 +176,7 @@ Monte o volume com o modelo treinado:
   docker run -v $(pwd)/models:/app/models heat-exchanger-inference ...
 ```
 
-A mensagem de erro agora é explícita e orienta o usuário — diferente do módulo anterior.
+A mensagem de erro agora é explícita e orienta o usuário  diferente do módulo anterior.
 
 ---
 

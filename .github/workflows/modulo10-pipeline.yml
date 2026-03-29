@@ -1,5 +1,5 @@
 # =============================================================================
-# Workflow: Modulo 10 — Pipeline End-to-End
+# Workflow: Modulo 10  Pipeline End-to-End
 #
 # Pipeline completo: commit → build → test → push → smoke test de serving
 #
@@ -21,7 +21,7 @@
 #   DOCKERHUB_TOKEN    → Access Token do Docker Hub
 # =============================================================================
 
-name: Modulo 10 — Pipeline End-to-End
+name: Modulo 10  Pipeline End-to-End
 
 on:
   push:
@@ -47,7 +47,7 @@ jobs:
   # Job 1: Build da imagem de TREINO
   # ===========================================================================
   build-train:
-    name: Build — imagem de treino
+    name: Build  imagem de treino
     runs-on: ubuntu-latest
 
     steps:
@@ -97,7 +97,7 @@ jobs:
   # Job 2: Build da imagem de SERVING
   # ===========================================================================
   build-serve:
-    name: Build — imagem de serving
+    name: Build  imagem de serving
     runs-on: ubuntu-latest
 
     steps:
@@ -144,10 +144,10 @@ jobs:
           retention-days: 1
 
   # ===========================================================================
-  # Job 3: Testes de integração — pipeline CLI (treino + inferência)
+  # Job 3: Testes de integração  pipeline CLI (treino + inferência)
   # ===========================================================================
   test:
-    name: Teste — integração completa
+    name: Teste  integração completa
     runs-on: ubuntu-latest
     needs: [build-train, build-serve]
 
@@ -177,14 +177,14 @@ jobs:
           test -f models/registry.json    && echo "OK: registry.json"
           cat models/registry.json
 
-      - name: Inferência CLI — por data
+      - name: Inferência CLI  por data
         run: |
           docker run --rm \
             -v $(pwd)/models:/app/models \
             heat-exchanger-train:${{ github.sha }} \
             python src/inference.py --date 2022-04-15
 
-      - name: Inferência CLI — por eficiência
+      - name: Inferência CLI  por eficiência
         run: |
           docker run --rm \
             -v $(pwd)/models:/app/models \
@@ -214,22 +214,22 @@ jobs:
           done
           curl -sf http://localhost:8000/health || (docker logs heat-serve-ci && exit 1)
 
-      - name: Smoke test — GET /health
+      - name: Smoke test  GET /health
         run: curl -sf http://localhost:8000/health | python3 -m json.tool
 
-      - name: Smoke test — POST /predict/date
+      - name: Smoke test  POST /predict/date
         run: |
           curl -sf -X POST http://localhost:8000/predict/date \
             -H "Content-Type: application/json" \
             -d '{"date": "2022-04-15"}' | python3 -m json.tool
 
-      - name: Smoke test — POST /predict/efficiency
+      - name: Smoke test  POST /predict/efficiency
         run: |
           curl -sf -X POST http://localhost:8000/predict/efficiency \
             -H "Content-Type: application/json" \
             -d '{"efficiency": 94.5}' | python3 -m json.tool
 
-      - name: Smoke test — GET /versions
+      - name: Smoke test  GET /versions
         run: curl -sf http://localhost:8000/versions | python3 -m json.tool
 
       - name: Remover container de serving do CI

@@ -1,5 +1,5 @@
 # =============================================================================
-# docker-compose.override.yml — Overrides para DESENVOLVIMENTO
+# docker-compose.override.yml  Overrides para DESENVOLVIMENTO
 #
 # Este arquivo é carregado automaticamente pelo Docker Compose quando você
 # roda `docker compose up` sem especificar -f. As configurações aqui
@@ -19,7 +19,7 @@ services:
     command: uvicorn app:app --host 0.0.0.0 --port 8000 --reload
     volumes:
       - models:/app/models
-      # Monta src/ local no container — alterações no código são refletidas
+      # Monta src/ local no container  alterações no código são refletidas
       # imediatamente sem precisar fazer docker compose build
       - ./src:/app/src
     environment:

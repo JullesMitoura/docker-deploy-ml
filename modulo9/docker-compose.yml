@@ -1,5 +1,5 @@
 # =============================================================================
-# docker-compose.yml — Pipeline completo local (modo produção)
+# docker-compose.yml  Pipeline completo local (modo produção)
 #
 # Serviços:
 #   train → executa treino uma vez e encerra
@@ -18,7 +18,7 @@
 services:
 
   # ===========================================================================
-  # train — executa o pipeline de treino e gera os artefatos versionados
+  # train  executa o pipeline de treino e gera os artefatos versionados
   # ===========================================================================
   train:
     build:
@@ -34,7 +34,7 @@ services:
     restart: "no"
 
   # ===========================================================================
-  # serve — API FastAPI que fica em execução contínua
+  # serve  API FastAPI que fica em execução contínua
   # ===========================================================================
   serve:
     build:
@@ -58,7 +58,7 @@ services:
         condition: service_completed_successfully
 
 # =============================================================================
-# Volume nomeado — artefatos persistem entre execuções do Compose
+# Volume nomeado  artefatos persistem entre execuções do Compose
 #
 # Diferença entre volume nomeado e bind mount:
 #   volume nomeado (aqui): gerenciado pelo Docker, mais portável

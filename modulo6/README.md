@@ -31,13 +31,13 @@
 
 ## O problema do módulo anterior
 
-Até agora, todo o fluxo — build, teste, execução — acontece manualmente na sua máquina. Isso cria um problema em equipes:
+Até agora, todo o fluxo  build, teste, execução  acontece manualmente na sua máquina. Isso cria um problema em equipes:
 
 - Quem garante que a imagem que foi para produção foi buildada corretamente?
 - Como saber se um PR quebrou o pipeline antes de fazer merge?
 - Como reproduzir o build em qualquer máquina sem depender do ambiente local?
 
-**CI (Continuous Integration)** resolve isso: a cada push, o pipeline roda automaticamente — mesma sequência, mesmo ambiente, resultados verificáveis.
+**CI (Continuous Integration)** resolve isso: a cada push, o pipeline roda automaticamente  mesma sequência, mesmo ambiente, resultados verificáveis.
 
 ---
 
@@ -107,7 +107,7 @@ Push 3 (novo req.txt):  build-train  ~3 min  | build-inference  ~2 min ← miss 
 
 ## Como os jobs trocam imagens
 
-Jobs do GitHub Actions rodam em VMs independentes — não compartilham sistema de arquivos. A estratégia usada aqui:
+Jobs do GitHub Actions rodam em VMs independentes  não compartilham sistema de arquivos. A estratégia usada aqui:
 
 ```
 build-train                    test
@@ -157,7 +157,7 @@ modulo6/
     └── .gitkeep
 ```
 
-> O workflow vive em `.github/workflows/` na raiz do repositório — essa é a localização padrão que o GitHub Actions detecta automaticamente.
+> O workflow vive em `.github/workflows/` na raiz do repositório  essa é a localização padrão que o GitHub Actions detecta automaticamente.
 
 ---
 
@@ -169,13 +169,13 @@ O workflow dispara automaticamente em qualquer push que altere `modulo6/**`:
 
 ```bash
 git add modulo6/ .github/
-git commit -m "feat: modulo 6 — CI com GitHub Actions"
+git commit -m "feat: modulo 6  CI com GitHub Actions"
 git push origin main
 ```
 
 ### 2. Acompanhe o pipeline
 
-Na página do repositório no GitHub: **Actions** → **Modulo 6 — CI Pipeline**
+Na página do repositório no GitHub: **Actions** → **Modulo 6  CI Pipeline**
 
 Você verá os três jobs com status em tempo real:
 
@@ -208,7 +208,7 @@ O job `test` falha, e o PR fica bloqueado. Corrija o erro e o pipeline fica verd
 
 ### 5. Disparo manual
 
-Na aba **Actions**, selecione **Modulo 6 — CI Pipeline** e clique em **Run workflow** — graças ao `workflow_dispatch` no YAML.
+Na aba **Actions**, selecione **Modulo 6  CI Pipeline** e clique em **Run workflow**  graças ao `workflow_dispatch` no YAML.
 
 ---
 

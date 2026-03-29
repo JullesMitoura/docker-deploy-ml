@@ -44,11 +44,11 @@ def load_data(db_path: str) -> pd.DataFrame:
 
 
 def train(X: np.ndarray, y: np.ndarray) -> LinearRegression:
-    logger.info("Iniciando treino — modelo: LinearRegression")
+    logger.info("Iniciando treino  modelo: LinearRegression")
     model = LinearRegression()
     model.fit(X, y)
     logger.info(
-        "Treino concluído — coef=%.6f  intercept=%.4f",
+        "Treino concluído  coef=%.6f  intercept=%.4f",
         model.coef_[0],
         model.intercept_,
     )

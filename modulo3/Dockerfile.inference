@@ -1,5 +1,5 @@
 # =============================================================================
-# Dockerfile.inference — Container de INFERÊNCIA
+# Dockerfile.inference  Container de INFERÊNCIA
 #
 # Responsabilidade única: carregar o modelo treinado e responder predições.
 #
@@ -11,7 +11,7 @@
 # =============================================================================
 # Imagem base
 #
-# Mesma versão do container de treino — garantia de compatibilidade de
+# Mesma versão do container de treino  garantia de compatibilidade de
 # ambiente Python entre quem gera e quem usa o model.pkl.
 # =============================================================================
 FROM python:3.11-slim
@@ -28,7 +28,7 @@ WORKDIR /app
 #   - pandas        → manipulação de datas na inferência
 #   - numpy         → operações vetoriais do modelo
 #
-# sqlalchemy NÃO está aqui — a inferência não lê o banco de dados.
+# sqlalchemy NÃO está aqui  a inferência não lê o banco de dados.
 # Remover uma dependência = imagem menor + menor superfície de ataque.
 # =============================================================================
 COPY requirements-inference.txt .
@@ -38,7 +38,7 @@ RUN pip install --no-cache-dir -r requirements-inference.txt
 # =============================================================================
 # Código-fonte
 #
-# O container de inferência precisa apenas de src/ — sem data/.
+# O container de inferência precisa apenas de src/  sem data/.
 # O banco SQLite não faz parte do pipeline de predição.
 #
 # O model.pkl é fornecido em runtime via volume:
@@ -54,7 +54,7 @@ COPY src/ src/
 # LOG_LEVEL → nível de log
 # PYTHONUNBUFFERED → logs em tempo real
 #
-# DB_PATH não está definido aqui — inferência não acessa banco de dados.
+# DB_PATH não está definido aqui  inferência não acessa banco de dados.
 # =============================================================================
 ENV MODEL_DIR=models \
     LOG_LEVEL=INFO \
@@ -64,7 +64,7 @@ ENV MODEL_DIR=models \
 # =============================================================================
 # Entrypoint de inferência
 #
-# O CMD padrão exibe o help — inferência sempre requer argumentos explícitos:
+# O CMD padrão exibe o help  inferência sempre requer argumentos explícitos:
 #
 #   # Prever eficiência para uma data:
 #   docker run -v $(pwd)/models:/app/models heat-exchanger-inference \

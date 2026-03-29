@@ -1,10 +1,10 @@
 """
-inference.py — dois modos de uso:
+inference.py  dois modos de uso:
 
-  Modo 1 — prever eficiência para uma data:
+  Modo 1  prever eficiência para uma data:
     python src/inference.py --date 2025-06-15
 
-  Modo 2 — estimar a data para uma eficiência alvo:
+  Modo 2  estimar a data para uma eficiência alvo:
     python src/inference.py --efficiency 80.0
 
 Versionamento:
@@ -44,7 +44,7 @@ def load_artifacts(version_tag: str | None = None):
     version = artifact.get("version", "desconhecida")
     logger.info("Versão carregada: %s", version)
     logger.debug(
-        "Artefato — origem: %s  última data: %s",
+        "Artefato  origem: %s  última data: %s",
         artifact["origin_date"].date(),
         artifact["last_date"].date(),
     )
@@ -76,7 +76,7 @@ def find_date_for_efficiency(model, origin_date, last_date, target_efficiency: f
     in_history    = predicted_date.date() <= last_date.date()
 
     logger.debug(
-        "Regressão inversa — a=%.6f  b=%.4f  day=%.1f  data=%s  histórico=%s",
+        "Regressão inversa  a=%.6f  b=%.4f  day=%.1f  data=%s  histórico=%s",
         a, b, predicted_day, predicted_date.date(), in_history,
     )
 
@@ -88,7 +88,7 @@ def find_date_for_efficiency(model, origin_date, last_date, target_efficiency: f
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Inferência — Trocador de Calor")
+    parser = argparse.ArgumentParser(description="Inferência  Trocador de Calor")
     group  = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--date",       type=str,   help="Data para prever eficiência (YYYY-MM-DD)")
     group.add_argument("--efficiency", type=float, help="Eficiência alvo para estimar a data")

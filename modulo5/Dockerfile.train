@@ -1,5 +1,5 @@
 # =============================================================================
-# Dockerfile.train — Container de TREINO com versionamento de artefatos
+# Dockerfile.train  Container de TREINO com versionamento de artefatos
 #
 # Novidade deste módulo: o container agora gera artefatos versionados.
 # A cada execução são criados:

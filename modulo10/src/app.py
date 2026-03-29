@@ -1,5 +1,5 @@
 """
-app.py — API de inferência do trocador de calor (FastAPI)
+app.py  API de inferência do trocador de calor (FastAPI)
 
 Endpoints:
   GET  /              → informações da API e versão do modelo carregado
@@ -27,7 +27,7 @@ PORT          = int(os.getenv("PORT",      "8000"))
 
 logger = get_logger(__name__)
 
-# Estado global — carregado uma única vez na inicialização da API
+# Estado global  carregado uma única vez na inicialização da API
 _model        = None
 _origin_date  = None
 _last_date    = None
@@ -35,7 +35,7 @@ _loaded_version = "desconhecida"
 
 
 # =============================================================================
-# Lifespan — carregamento do modelo na inicialização
+# Lifespan  carregamento do modelo na inicialização
 #
 # O contexto @asynccontextmanager permite rodar código de setup antes de
 # a API começar a aceitar requisições e código de teardown ao encerrar.
@@ -63,7 +63,7 @@ async def lifespan(app: FastAPI):
     _loaded_version = artifact.get("version", "desconhecida")
 
     logger.info(
-        "Modelo carregado — versão: %s | período: %s → %s",
+        "Modelo carregado  versão: %s | período: %s → %s",
         _loaded_version,
         _origin_date.date(),
         _last_date.date(),
@@ -123,7 +123,7 @@ def root():
 @app.get("/health")
 def health():
     """
-    Health check — usado por load balancers, Kubernetes liveness probe, etc.
+    Health check  usado por load balancers, Kubernetes liveness probe, etc.
     Retorna 200 enquanto o modelo estiver carregado.
     """
     return {

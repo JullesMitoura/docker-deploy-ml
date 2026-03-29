@@ -1,5 +1,5 @@
 # =============================================================================
-# Dockerfile.train — Container de TREINO (mesmo do módulo 05)
+# Dockerfile.train  Container de TREINO (mesmo do módulo 05)
 # Gera os artefatos versionados que a API de serving vai consumir.
 # =============================================================================
 FROM python:3.11-slim AS builder

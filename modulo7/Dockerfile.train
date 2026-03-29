@@ -1,6 +1,6 @@
 # =============================================================================
-# Dockerfile.train — Container de TREINO
-# Idêntico ao módulo 05/06 — o CD publica esta imagem no Docker Hub.
+# Dockerfile.train  Container de TREINO
+# Idêntico ao módulo 05/06  o CD publica esta imagem no Docker Hub.
 # =============================================================================
 FROM python:3.11-slim AS builder
 

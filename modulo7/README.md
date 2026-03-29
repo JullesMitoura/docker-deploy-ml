@@ -32,7 +32,7 @@
 
 ## O problema do módulo anterior
 
-No módulo 06, o CI builda e testa as imagens — mas elas existem apenas na VM efêmera do GitHub Actions. Quando o job termina, as imagens somem.
+No módulo 06, o CI builda e testa as imagens  mas elas existem apenas na VM efêmera do GitHub Actions. Quando o job termina, as imagens somem.
 
 Para que outro time puxe a imagem, ou para que a inferência rode em qualquer servidor, a imagem precisa estar **publicada em um registry**.
 
@@ -64,7 +64,7 @@ Acesse [hub.docker.com](https://hub.docker.com) e crie uma conta gratuita.
 2. **Security** → **New Access Token**
 3. Nome: `github-actions-heat-exchanger`
 4. Permissões: **Read, Write, Delete**
-5. Copie o token gerado — ele não será exibido novamente
+5. Copie o token gerado  ele não será exibido novamente
 
 ### 3. Configure os Secrets no GitHub
 
@@ -91,13 +91,13 @@ O workflow usa `docker/metadata-action` para gerar tags automaticamente:
 
 ### Por que `:latest` não é suficiente em produção?
 
-`:latest` é mutável — ele aponta para a versão mais recente. Em produção, é preciso saber **exatamente** qual versão está rodando:
+`:latest` é mutável  ele aponta para a versão mais recente. Em produção, é preciso saber **exatamente** qual versão está rodando:
 
 ```bash
-# Ruim em produção — pode mudar sem você saber
+# Ruim em produção  pode mudar sem você saber
 docker pull username/heat-exchanger-train:latest
 
-# Bom em produção — imutável, rastreável
+# Bom em produção  imutável, rastreável
 docker pull username/heat-exchanger-train:v1.2.3
 docker pull username/heat-exchanger-train:abc1234
 ```
@@ -119,7 +119,7 @@ tag v*.*.* ───────────────────────
 **Por que não publicar em feature branches?**
 - Evita poluir o registry com imagens de desenvolvimento
 - Garante que apenas código revisado e aprovado vai para o Docker Hub
-- Pull requests de forks não têm acesso a secrets — não podem autenticar
+- Pull requests de forks não têm acesso a secrets  não podem autenticar
 
 ---
 
@@ -189,13 +189,13 @@ Siga os passos da seção **Configuração: Docker Hub + Secrets** acima.
 
 ```bash
 git add modulo7/ .github/workflows/modulo7-cd.yml
-git commit -m "feat: modulo 7 — publicação no Docker Hub"
+git commit -m "feat: modulo 7  publicação no Docker Hub"
 git push origin main
 ```
 
 ### 3. Acompanhe o pipeline
 
-**Actions → Modulo 7 — CI/CD + Docker Hub**
+**Actions → Modulo 7  CI/CD + Docker Hub**
 
 ```
 ✓ build-train     (2m 45s)  → pushed username/heat-exchanger-train:latest
@@ -232,7 +232,7 @@ O workflow dispara novamente e publica `:v1.0.0`, `:1.0`, `:1`, `:latest`.
 
 ### 7. Teste o fluxo de PR
 
-Crie um branch, abra um PR. O pipeline builda e testa — mas **não** faz push. Somente após o merge em main a imagem é publicada.
+Crie um branch, abra um PR. O pipeline builda e testa  mas **não** faz push. Somente após o merge em main a imagem é publicada.
 
 ---
 

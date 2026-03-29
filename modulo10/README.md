@@ -177,23 +177,23 @@ modulo10/
 Este curso cobriu o ciclo básico de ML em produção com Docker. Os temas abaixo são os passos naturais para evoluir o projeto:
 
 ### Orquestração
-- **Kubernetes** — escala horizontal de pods de serving, rolling updates, liveness/readiness probes
-- **Docker Swarm** — alternativa mais simples ao Kubernetes para clusters pequenos
+- **Kubernetes**  escala horizontal de pods de serving, rolling updates, liveness/readiness probes
+- **Docker Swarm**  alternativa mais simples ao Kubernetes para clusters pequenos
 
 ### MLOps e rastreabilidade
-- **MLflow** — tracking de experimentos, model registry com versionamento automático, model serving
-- **DVC** — versionamento de dados e pipelines de ML (complementa o git)
-- **Weights & Biases** — visualização de treino e comparação de modelos
+- **MLflow**  tracking de experimentos, model registry com versionamento automático, model serving
+- **DVC**  versionamento de dados e pipelines de ML (complementa o git)
+- **Weights & Biases**  visualização de treino e comparação de modelos
 
 ### Monitoramento
-- **Prometheus + Grafana** — métricas de infraestrutura e da API (latência, throughput)
-- **Data drift detection** — monitorar se os dados de entrada mudaram em relação ao treino
-- **Evidently AI** — relatórios automáticos de drift e qualidade do modelo
+- **Prometheus + Grafana**  métricas de infraestrutura e da API (latência, throughput)
+- **Data drift detection**  monitorar se os dados de entrada mudaram em relação ao treino
+- **Evidently AI**  relatórios automáticos de drift e qualidade do modelo
 
 ### Deploy em nuvem
-- **AWS ECS / Fargate** — containers gerenciados na AWS
-- **Google Cloud Run** — containers serverless no GCP
-- **Azure Container Instances** — containers na Azure
+- **AWS ECS / Fargate**  containers gerenciados na AWS
+- **Google Cloud Run**  containers serverless no GCP
+- **Azure Container Instances**  containers na Azure
 
 ---
 
