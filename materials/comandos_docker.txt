@@ -1,0 +1,12 @@
+Comandos básicos de docker:
+
+docker ps: para verificarmos quantos containers e quais são os que estão rodando na nossa máquina.
+
+docker run hello-world: executa uma imagem de teste que é uma imagem do docker hub.
+
+Após isso podemos executar novamente o docker ps e agora veremos os detalhes das imagens. Nesse caso, não teremos resultados pois o container anterior foi executado mas finalizado.
+Para verificarmos mesmo os que ja foram finalizados, faremos:
+
+docker ps -a: teremos acesso a todos os containers ja executados.
+
+Por hora, esses comandos ainda não são úteis mas isso é parte do ciclo de introdução. Verificaremos mais detalhes em outros modulos deste curso.
