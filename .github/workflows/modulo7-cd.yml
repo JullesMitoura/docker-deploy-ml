@@ -1,26 +1,4 @@
-# =============================================================================
-# Workflow: Modulo 7  CI/CD + Docker Hub
-#
-# Objetivo: construir, testar e publicar as imagens Docker no Docker Hub.
-#
-# Estrutura de jobs:
-#
-#   build-train ──┐
-#                 ├──► test ──► push (apenas em main ou tag)
-#   build-inference┘
-#
-# Estratégia de branches:
-#   - Pull Request   → build + test  (sem push ao Docker Hub)
-#   - Push em main   → build + test + push com tags :latest e :main-{sha}
-#   - Git tag v*.*.*  → build + test + push com tags semver (:v1.2.3, :1.2, :1)
-#
-# Pré-requisito  Secrets configurados no repositório GitHub:
-#   Settings → Secrets and variables → Actions → New repository secret
-#   DOCKERHUB_USERNAME → seu usuário do Docker Hub
-#   DOCKERHUB_TOKEN    → Access Token gerado em hub.docker.com/settings/security
-# =============================================================================
-
-name: Modulo 7  CI/CD + Docker Hub
+name: Modulo 7 CI/CD + Docker Hub
 
 on:
   push:
@@ -34,118 +12,66 @@ on:
     paths:
       - "modulo7/**"
       - ".github/workflows/modulo7-cd.yml"
-
   workflow_dispatch:
 
 env:
-  # Nome das imagens no Docker Hub  substitua pelo seu usuário nas variáveis secretas
   IMAGE_TRAIN:     ${{ secrets.DOCKERHUB_USERNAME }}/heat-exchanger-train
   IMAGE_INFERENCE: ${{ secrets.DOCKERHUB_USERNAME }}/heat-exchanger-inference
 
 jobs:
-  # ===========================================================================
-  # Job 1: Build da imagem de TREINO
-  #
-  # - Gera tags automaticamente com docker/metadata-action
-  # - Faz push ao Docker Hub apenas fora de PRs (main ou tag)
-  # - Exporta imagem como tarball para o job de teste (sempre)
-  # ===========================================================================
   build-train:
-    name: Build  imagem de treino
+    name: Build imagem de treino
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout do repositório
-        uses: actions/checkout@v4
-
-      - name: Configurar Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      # -----------------------------------------------------------------------
-      # Autenticação no Docker Hub
-      #
-      # Só ocorre fora de PRs  pull requests de forks não têm acesso a secrets.
-      # Em PRs, as imagens são buildadas mas não publicadas.
-      # -----------------------------------------------------------------------
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
       - name: Login no Docker Hub
         if: github.event_name != 'pull_request'
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      # -----------------------------------------------------------------------
-      # Geração automática de tags
-      #
-      # metadata-action gera tags baseadas no evento que disparou o workflow:
-      #
-      # Push em main:      :latest  :main  :main-abc1234
-      # Push em feature:   :feature-minha-feature  :sha-abc1234
-      # Git tag v1.2.3:    :v1.2.3  :1.2  :1  :latest
-      # Pull Request #42:  :pr-42
-      # -----------------------------------------------------------------------
-      - name: Gerar tags e labels da imagem
+      - name: Gerar tags
         id: meta-train
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.IMAGE_TRAIN }}
           tags: |
-            # Tag com nome do branch (ex: main, feature-nova-feature)
             type=ref,event=branch
-            # Tag de pull request (ex: pr-42)
             type=ref,event=pr
-            # Tags semver quando o push é uma git tag (ex: v1.2.3 → 1.2.3, 1.2, 1)
             type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            # Tag com hash curto do commit (ex: abc1234)
             type=sha,prefix=
-            # :latest somente no branch main
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
-
-      - name: Build e push da imagem de treino
-        id: build-train
+      - name: Build e push
         uses: docker/build-push-action@v5
         with:
           context: modulo7
           file: modulo7/Dockerfile.train
-          # Push apenas fora de PRs (main ou tag semver)
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta-train.outputs.tags }}
           labels: ${{ steps.meta-train.outputs.labels }}
           cache-from: type=gha,scope=mod7-train
           cache-to: type=gha,scope=mod7-train,mode=max
-          # Exporta também como tarball para o job de teste
           outputs: type=docker,dest=/tmp/train.tar
-
-      - name: Publicar imagem como artefato de CI
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: train-image
           path: /tmp/train.tar
           retention-days: 1
 
-  # ===========================================================================
-  # Job 2: Build da imagem de INFERÊNCIA (paralelo ao build-train)
-  # ===========================================================================
   build-inference:
-    name: Build  imagem de inferência
+    name: Build imagem de inferência
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout do repositório
-        uses: actions/checkout@v4
-
-      - name: Configurar Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
       - name: Login no Docker Hub
         if: github.event_name != 'pull_request'
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Gerar tags e labels da imagem
+      - name: Gerar tags
         id: meta-inference
         uses: docker/metadata-action@v5
         with:
@@ -154,11 +80,9 @@ jobs:
             type=ref,event=branch
             type=ref,event=pr
             type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
             type=sha,prefix=
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
-
-      - name: Build e push da imagem de inferência
+      - name: Build e push
         uses: docker/build-push-action@v5
         with:
           context: modulo7
@@ -169,70 +93,48 @@ jobs:
           cache-from: type=gha,scope=mod7-inference
           cache-to: type=gha,scope=mod7-inference,mode=max
           outputs: type=docker,dest=/tmp/inference.tar
-
-      - name: Publicar imagem como artefato de CI
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: inference-image
           path: /tmp/inference.tar
           retention-days: 1
 
-  # ===========================================================================
-  # Job 3: Testes de integração
-  #
-  # Sempre executa  valida que treino e inferência funcionam antes de qualquer
-  # publicação. O push aconteceu nos jobs de build (não aqui), mas o workflow
-  # falha como um todo se este job falhar  garantindo que imagens quebradas
-  # não ficam no Docker Hub sem sinalização de erro.
-  # ===========================================================================
   test:
-    name: Teste  integração treino + inferência
+    name: Teste integração treino + inferência
     runs-on: ubuntu-latest
     needs: [build-train, build-inference]
-
     steps:
-      - name: Download das imagens
-        uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v4
         with:
           pattern: "*-image"
           path: /tmp
-
-      - name: Carregar imagens no Docker local
+      - name: Carregar imagens
         run: |
           docker load -i /tmp/train-image/train.tar
           docker load -i /tmp/inference-image/inference.tar
-
-      - name: Criar diretório de modelos compartilhado
-        run: mkdir -p models
-
+      - run: mkdir -p models
       - name: Executar treino
         run: |
           docker run \
             -v $(pwd)/models:/app/models \
             heat-exchanger-train:${{ github.sha }}
-
-      - name: Verificar artefatos gerados
+      - name: Verificar artefatos
         run: |
-          echo "=== Conteúdo de models/ ==="
-          ls -lh models/
           test -f models/model_latest.pkl && echo "OK: model_latest.pkl"
           test -f models/registry.json    && echo "OK: registry.json"
-
-      - name: Inferência  prever eficiência por data
+      - name: Inferência por data
         run: |
           docker run \
             -v $(pwd)/models:/app/models \
             heat-exchanger-inference:${{ github.sha }} \
             python src/inference.py --date 2022-04-15
-
-      - name: Inferência  estimar data para eficiência alvo
+      - name: Inferência por eficiência
         run: |
           docker run \
             -v $(pwd)/models:/app/models \
             heat-exchanger-inference:${{ github.sha }} \
             python src/inference.py --efficiency 94.5
-
-      - name: Listar versões no registry
+      - name: Listar versões
         run: |
           docker run \
             -v $(pwd)/models:/app/models \

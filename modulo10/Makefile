@@ -1,10 +1,3 @@
-# =============================================================================
-# Makefile  Heat Exchanger ML Pipeline
-#
-# Consolida todos os comandos do curso em atalhos simples.
-# Uso: make <target>
-# =============================================================================
-
 TRAIN_IMAGE := heat-exchanger-train
 SERVE_IMAGE := heat-exchanger-serve
 MODELS_DIR  := $(CURDIR)/models
@@ -13,91 +6,54 @@ PORT        := 8000
 .PHONY: help build-train build-serve build train serve up stop logs \
         health predict-date predict-efficiency versions clean
 
-# --- Ajuda ------------------------------------------------------------------
 help:
-	@echo ""
-	@echo "Heat Exchanger ML Pipeline"
-	@echo "=========================="
-	@echo ""
-	@echo "Construção:"
-	@echo "  make build-train        Builda a imagem de treino"
-	@echo "  make build-serve        Builda a imagem de serving"
-	@echo "  make build              Builda ambas as imagens"
-	@echo ""
-	@echo "Execução:"
-	@echo "  make train              Executa o treino e gera artefatos"
-	@echo "  make serve              Sobe a API de serving (background)"
-	@echo "  make up                 build + train + serve (pipeline completo)"
-	@echo ""
-	@echo "Operações:"
-	@echo "  make stop               Para e remove o container de serving"
-	@echo "  make logs               Exibe logs da API em tempo real"
-	@echo "  make health             Verifica o health da API"
-	@echo "  make predict-date       Predição de eficiência (DATE=YYYY-MM-DD)"
-	@echo "  make predict-efficiency Predição de data (EFFICIENCY=94.5)"
-	@echo "  make versions           Lista versões de modelo disponíveis"
-	@echo ""
-	@echo "Manutenção:"
-	@echo "  make clean              Remove imagens e artefatos locais"
-	@echo ""
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-20s %s\n", $$1, $$2}'
 
-# --- Construção -------------------------------------------------------------
-build-train:
+build-train: ## Builda a imagem de treino
 	docker build -f Dockerfile.train -t $(TRAIN_IMAGE) .
 
-build-serve:
+build-serve: ## Builda a imagem de serving
 	docker build -f Dockerfile.serve -t $(SERVE_IMAGE) .
 
-build: build-train build-serve
+build: build-train build-serve ## Builda ambas as imagens
 
-# --- Execução ---------------------------------------------------------------
-train:
+train: ## Executa o treino e gera artefatos
 	@mkdir -p $(MODELS_DIR)
 	docker run --rm -v $(MODELS_DIR):/app/models $(TRAIN_IMAGE)
 
-serve:
+serve: ## Sobe a API de serving em background
 	docker run -d \
 	  --name heat-serve \
 	  -v $(MODELS_DIR):/app/models \
 	  -p $(PORT):8000 \
 	  --restart unless-stopped \
 	  $(SERVE_IMAGE)
-	@echo ""
-	@echo "API disponível em http://localhost:$(PORT)"
-	@echo "Documentação:     http://localhost:$(PORT)/docs"
-	@echo ""
 
-up: build train serve
+up: build train serve ## Pipeline completo: build + train + serve
 
-# --- Operações -------------------------------------------------------------
-stop:
+stop: ## Para e remove o container de serving
 	@docker stop heat-serve 2>/dev/null || true
 	@docker rm   heat-serve 2>/dev/null || true
-	@echo "Container de serving removido."
 
-logs:
+logs: ## Exibe logs da API em tempo real
 	docker logs -f heat-serve
 
-health:
+health: ## Verifica o health da API
 	@curl -s http://localhost:$(PORT)/health | python3 -m json.tool
 
-# Uso: make predict-date DATE=2022-04-15
-predict-date:
+predict-date: ## Predicao de eficiencia (DATE=YYYY-MM-DD)
 	@curl -s -X POST http://localhost:$(PORT)/predict/date \
 	  -H "Content-Type: application/json" \
 	  -d '{"date": "$(DATE)"}' | python3 -m json.tool
 
-# Uso: make predict-efficiency EFFICIENCY=94.5
-predict-efficiency:
+predict-efficiency: ## Predicao de data (EFFICIENCY=94.5)
 	@curl -s -X POST http://localhost:$(PORT)/predict/efficiency \
 	  -H "Content-Type: application/json" \
 	  -d '{"efficiency": $(EFFICIENCY)}' | python3 -m json.tool
 
-versions:
+versions: ## Lista versoes de modelo disponiveis
 	@curl -s http://localhost:$(PORT)/versions | python3 -m json.tool
 
-# --- Manutenção -------------------------------------------------------------
-clean: stop
+clean: stop ## Remove imagens e artefatos locais
 	@docker rmi $(TRAIN_IMAGE) $(SERVE_IMAGE) 2>/dev/null || true
 	@rm -f $(MODELS_DIR)/*.pkl $(MODELS_DIR)/registry.json
-	@echo "Imagens e artefatos removidos."
